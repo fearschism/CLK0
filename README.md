@@ -1,19 +1,16 @@
 # TGS Saudi Website
 
-Modern bilingual (EN/AR) marketing site for **TGS Saudi** — a Riyadh-based professional services firm in the TGS global network.
+Saudi member-firm site aligned with [TGS Global](https://tgs-global.com/) branding.
 
 ## Stack
 
 - Vite + React + TypeScript
 - React Router
-- Custom CSS design system (no UI kit)
+- EN / AR + RTL
 
 ## Pages
 
-- **Home** — brand hero, featured services, about, stats, CTA
-- **Services** — full service catalogue with details
-- **About** — firm story, vision, values
-- **Contact** — office details + inquiry form (mailto)
+- Home · Services · **Clients** · About · Contact
 
 ## Run locally
 
@@ -22,28 +19,35 @@ npm install
 npm run dev
 ```
 
-Build:
+## GitHub Pages (fix the main.tsx 404)
+
+The live site must serve the **built** files, not the Vite source.
+
+**Recommended (this branch):**
+
+1. Open **Settings → Pages**
+2. Source: **Deploy from a branch**
+3. Branch: **`cursor/tgs-saudi`**
+4. Folder: **`/docs`** ← not `/` (root)
+5. Save
+
+URL: **https://fearschism.github.io/CLK0/**
+
+Why: root `index.html` points at `/src/main.tsx` (dev only).  
+`docs/index.html` points at `/CLK0/assets/...` (production).
+
+**Alternative:** Branch **`gh-pages`** / folder **`/`** (also has the production build).
+
+### Rebuild docs after changes
 
 ```bash
 npm run build
-npm run preview
+rm -rf docs && mkdir docs && cp -r dist/* docs/ && cp dist/index.html docs/404.html
+git add docs && git commit -m "Update Pages build" && git push
 ```
 
-## GitHub Pages (github.io)
+## Design
 
-**https://fearschism.github.io/CLK0/**
-
-The built site is already on the `gh-pages` branch. Enable it once:
-
-1. Open **Settings → Pages**
-2. Set **Source** to **Deploy from a branch**
-3. Branch: **`gh-pages`** / folder: **`/`**
-4. Save — the site goes live at the URL above
-
-Optional: after merge, use **GitHub Actions** as the Pages source with `.github/workflows/deploy-pages.yml`.
-
-## Design notes
-
-- Forest green + sand palette (professional KSA feel)
-- Display type: Cormorant Garamond · Body: Manrope
-- Language toggle switches EN/AR and RTL layout
+- TGS Global orange `#F58025`, dark nav/footer
+- Poppins + Noto Sans
+- Saudi specialisations + Clients portfolio tab
