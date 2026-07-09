@@ -29,6 +29,14 @@ npm run build
 npm run preview
 ```
 
+## GitHub Pages
+
+Live URL after deploy:
+
+**https://fearschism.github.io/CLK0/**
+
+Pushing to `main` (or this feature branch) runs `.github/workflows/deploy-pages.yml` and publishes the `dist` build.
+
 ## Design notes
 
 - Forest green + sand palette (professional KSA feel)

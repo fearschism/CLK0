@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:check": "npm run build && cp dist/index.html dist/404.html"
   },
   "dependencies": {
     "react": "^19.1.0",

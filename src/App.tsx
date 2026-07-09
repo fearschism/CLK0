@@ -9,7 +9,7 @@ import { ServicesPage } from "./pages/ServicesPage";
 export default function App() {
   return (
     <I18nProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/CLK0">
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<HomePage />} />
