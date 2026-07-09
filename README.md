@@ -29,13 +29,18 @@ npm run build
 npm run preview
 ```
 
-## GitHub Pages
-
-Live URL after deploy:
+## GitHub Pages (github.io)
 
 **https://fearschism.github.io/CLK0/**
 
-Pushing to `main` (or this feature branch) runs `.github/workflows/deploy-pages.yml` and publishes the `dist` build.
+The built site is already on the `gh-pages` branch. Enable it once:
+
+1. Open **Settings → Pages**
+2. Set **Source** to **Deploy from a branch**
+3. Branch: **`gh-pages`** / folder: **`/`**
+4. Save — the site goes live at the URL above
+
+Optional: after merge, use **GitHub Actions** as the Pages source with `.github/workflows/deploy-pages.yml`.
 
 ## Design notes
 
