@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
+import { Reveal } from "../components/Reveal";
 import { contact, services } from "../data";
 import { useCopy, useI18n } from "../i18n";
-import { Reveal } from "../components/Reveal";
 
 export function ContactPage() {
   const { lang, t } = useI18n();
@@ -37,7 +37,7 @@ export function ContactPage() {
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: "2rem" }}>
+      <section className="section" style={{ paddingTop: "1.5rem" }}>
         <div className="container contact-grid">
           <Reveal>
             <div className="contact-list">
@@ -62,7 +62,7 @@ export function ContactPage() {
             </div>
           </Reveal>
 
-          <Reveal delay={90}>
+          <Reveal delay={80}>
             <form className="form" onSubmit={onSubmit}>
               <label>
                 {t(copy.contactPage.name)}

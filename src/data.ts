@@ -2,10 +2,10 @@ export type Lang = "en" | "ar";
 
 export type Service = {
   id: string;
-  category: "expertise" | "specialisation";
   title: { en: string; ar: string };
   summary: { en: string; ar: string };
   details: { en: string[]; ar: string[] };
+  icon: "audit" | "accounting" | "advisory" | "tax" | "legal" | "digital";
 };
 
 export type Client = {
@@ -15,12 +15,50 @@ export type Client = {
   location: { en: string; ar: string };
   focus: { en: string; ar: string };
   initials: string;
+  logoColor: string;
 };
+
+export type Insight = {
+  id: string;
+  date: { en: string; ar: string };
+  category: { en: string; ar: string };
+  title: { en: string; ar: string };
+  image: string;
+};
+
+export const pillars = [
+  {
+    id: "establish",
+    title: { en: "Establish", ar: "التأسيس" },
+    text: {
+      en: "Set up and structure your business in Saudi Arabia with confidence — from company formation to compliance readiness.",
+      ar: "أسّس وهيكل أعمالك في السعودية بثقة — من تأسيس الشركة إلى جاهزية الامتثال.",
+    },
+    icon: "establish" as const,
+  },
+  {
+    id: "grow",
+    title: { en: "Grow", ar: "النمو" },
+    text: {
+      en: "Scale with clear strategy, financial insight, and advisory support tailored to middle-market ambitions.",
+      ar: "توسّع باستراتيجية واضحة ورؤية مالية ودعم استشاري يناسب طموحات السوق المتوسط.",
+    },
+    icon: "grow" as const,
+  },
+  {
+    id: "transform",
+    title: { en: "Transform", ar: "التحول" },
+    text: {
+      en: "Modernise operations, controls, and digital finance so your organisation stays resilient and future-ready.",
+      ar: "حدّث العمليات والرقابة والمالية الرقمية لتبقى منظمتك مرنة وجاهزة للمستقبل.",
+    },
+    icon: "transform" as const,
+  },
+];
 
 export const expertise: Service[] = [
   {
     id: "audit",
-    category: "expertise",
     title: { en: "Audit", ar: "التدقيق" },
     summary: {
       en: "Independent financial audit and assurance for Saudi and cross-border reporting needs.",
@@ -38,10 +76,10 @@ export const expertise: Service[] = [
         "ارتباطات متوافقة مع الجودة للمجموعات الدولية",
       ],
     },
+    icon: "audit",
   },
   {
     id: "accounting",
-    category: "expertise",
     title: { en: "Accounting", ar: "المحاسبة" },
     summary: {
       en: "Practical accounting support that keeps books clean, decision-ready, and audit-friendly.",
@@ -59,14 +97,14 @@ export const expertise: Service[] = [
         "دعم العمليات لفرق المالية النامية",
       ],
     },
+    icon: "accounting",
   },
   {
     id: "advisory",
-    category: "expertise",
     title: { en: "Advisory", ar: "الاستشارات" },
     summary: {
-      en: "Business advisory for middle-market leaders navigating growth, governance, and complexity.",
-      ar: "استشارات أعمال لقادة السوق المتوسط في النمو والحوكمة والتعقيد.",
+      en: "Business advisory for leaders navigating growth, governance, and complexity in the Kingdom.",
+      ar: "استشارات أعمال للقادة في النمو والحوكمة والتعقيد داخل المملكة.",
     },
     details: {
       en: [
@@ -80,142 +118,55 @@ export const expertise: Service[] = [
         "دعم الصفقات وإعادة الهيكلة",
       ],
     },
+    icon: "advisory",
   },
   {
     id: "tax",
-    category: "expertise",
-    title: { en: "Tax", ar: "الضرائب" },
+    title: { en: "Tax & Zakat", ar: "الضرائب والزكاة" },
     summary: {
-      en: "Corporate tax, VAT, and compliance guidance for domestic operators and international groups.",
-      ar: "ضريبة الشركات وضريبة القيمة المضافة والامتثال للمنشآت المحلية والمجموعات الدولية.",
+      en: "Corporate tax, VAT, and zakat guidance aligned with ZATCA requirements.",
+      ar: "ضريبة الشركات وضريبة القيمة المضافة والزكاة وفق متطلبات هيئة الزكاة والضريبة والجمارك.",
     },
     details: {
       en: [
         "Corporate income tax and VAT advisory",
-        "Compliance calendars and return support",
+        "Zakat computation and filing support",
         "Cross-border tax considerations",
       ],
       ar: [
         "استشارات ضريبة الدخل وضريبة القيمة المضافة",
-        "جداول الامتثال ودعم الإقرارات",
+        "احتساب الزكاة ودعم الإقرارات",
         "اعتبارات ضريبية عابرة للحدود",
       ],
     },
+    icon: "tax",
   },
   {
-    id: "zakat",
-    category: "expertise",
-    title: { en: "Zakat", ar: "الزكاة" },
+    id: "legal",
+    title: { en: "Legal", ar: "القانونية" },
     summary: {
-      en: "KSA-focused zakat computation, filing support, and advisory aligned with ZATCA requirements.",
-      ar: "احتساب الزكاة وتقديم الإقرارات والاستشارات وفق متطلبات هيئة الزكاة والضريبة والجمارك.",
+      en: "Commercial legal support through the TGS network for contracts, structuring, and compliance.",
+      ar: "دعم قانوني تجاري عبر شبكة TGS للعقود والهيكلة والامتثال.",
     },
     details: {
       en: [
-        "Zakat base assessment and compliance reviews",
-        "Filing support and documentation readiness",
-        "Advisory for mixed ownership structures",
+        "Commercial contracts and corporate matters",
+        "Structuring support for local and cross-border work",
+        "Coordination with TGS legal member firms",
       ],
       ar: [
-        "تقييم وعاء الزكاة ومراجعات الامتثال",
-        "دعم تقديم الإقرارات وتجهيز المستندات",
-        "استشارات لهياكل الملكية المختلطة",
+        "العقود التجارية والشؤون المؤسسية",
+        "دعم الهيكلة للعمل المحلي والعابر للحدود",
+        "التنسيق مع مكاتب TGS القانونية الأعضاء",
       ],
     },
-  },
-];
-
-export const specialisations: Service[] = [
-  {
-    id: "local-content",
-    category: "specialisation",
-    title: { en: "Local Content Audit", ar: "تدقيق المحتوى المحلي" },
-    summary: {
-      en: "Verification and advisory around local content commitments in Saudi procurement.",
-      ar: "تحقق واستشارات حول التزامات المحتوى المحلي في المشتريات السعودية.",
-    },
-    details: {
-      en: [
-        "Local content measurement and evidence review",
-        "Audit support for procurement programs",
-        "Recommendations to strengthen in-Kingdom value",
-      ],
-      ar: [
-        "قياس المحتوى المحلي ومراجعة الأدلة",
-        "دعم التدقيق لبرامج المشتريات",
-        "توصيات لتعزيز القيمة داخل المملكة",
-      ],
-    },
+    icon: "legal",
   },
   {
-    id: "off-plan",
-    category: "specialisation",
-    title: { en: "Off-plan Sale & Rental", ar: "البيع والإيجار على الخارطة" },
+    id: "digital",
+    title: { en: "Digital & IT", ar: "الرقمنة وتقنية المعلومات" },
     summary: {
-      en: "Specialist guidance for off-plan real estate frameworks in the Kingdom.",
-      ar: "إرشاد متخصص لأطر البيع والإيجار على الخارطة في المملكة.",
-    },
-    details: {
-      en: [
-        "Regulatory and commercial readiness reviews",
-        "Process and documentation advisory",
-        "Support for developers and stakeholders",
-      ],
-      ar: [
-        "مراجعات الجاهزية التنظيمية والتجارية",
-        "استشارات الإجراءات والمستندات",
-        "دعم المطورين وأصحاب المصلحة",
-      ],
-    },
-  },
-  {
-    id: "corporate-finance",
-    category: "specialisation",
-    title: { en: "Corporate Finance", ar: "التمويل المؤسسي" },
-    summary: {
-      en: "Finance advisory that helps leadership evaluate capital, structure, and options.",
-      ar: "استشارات تمويل تساعد القيادة على تقييم رأس المال والهيكل والخيارات.",
-    },
-    details: {
-      en: [
-        "Capital and funding discussions",
-        "Financial due diligence support",
-        "Scenario analysis for strategic decisions",
-      ],
-      ar: [
-        "نقاشات رأس المال والتمويل",
-        "دعم العناية المالية الواجبة",
-        "تحليل سيناريوهات للقرارات الاستراتيجية",
-      ],
-    },
-  },
-  {
-    id: "risk",
-    category: "specialisation",
-    title: { en: "Internal Audit & Risk", ar: "التدقيق الداخلي والمخاطر" },
-    summary: {
-      en: "Internal audit and risk management that strengthens controls without slowing the business.",
-      ar: "تدقيق داخلي وإدارة مخاطر تعزز الرقابة دون إبطاء الأعمال.",
-    },
-    details: {
-      en: [
-        "Internal audit planning and execution",
-        "Control design and remediation",
-        "Risk assessment for leadership teams",
-      ],
-      ar: [
-        "تخطيط وتنفيذ التدقيق الداخلي",
-        "تصميم الضوابط ومعالجة الفجوات",
-        "تقييم المخاطر لفرق القيادة",
-      ],
-    },
-  },
-  {
-    id: "it",
-    category: "specialisation",
-    title: { en: "IT Systems & Solutions", ar: "أنظمة وتقنيات المعلومات" },
-    summary: {
-      en: "Technology-minded support to modernize finance operations and reporting reliability.",
+      en: "Technology-minded support to modernise finance operations and reporting reliability.",
       ar: "دعم تقني لتحديث عمليات المالية وموثوقية التقارير.",
     },
     details: {
@@ -230,125 +181,184 @@ export const specialisations: Service[] = [
         "تمكين رقمي لفرق المالية",
       ],
     },
+    icon: "digital",
   },
 ];
 
-export const services = [...expertise, ...specialisations];
+export const specialisations = [
+  {
+    id: "local-content",
+    title: { en: "Local Content Audit", ar: "تدقيق المحتوى المحلي" },
+    summary: {
+      en: "Verification and advisory around local content commitments in Saudi procurement.",
+      ar: "تحقق واستشارات حول التزامات المحتوى المحلي في المشتريات السعودية.",
+    },
+  },
+  {
+    id: "off-plan",
+    title: { en: "Off-plan Sale & Rental", ar: "البيع والإيجار على الخارطة" },
+    summary: {
+      en: "Specialist guidance for off-plan real estate frameworks in the Kingdom.",
+      ar: "إرشاد متخصص لأطر البيع والإيجار على الخارطة في المملكة.",
+    },
+  },
+  {
+    id: "risk",
+    title: { en: "Internal Audit & Risk", ar: "التدقيق الداخلي والمخاطر" },
+    summary: {
+      en: "Internal audit and risk management that strengthens controls without slowing the business.",
+      ar: "تدقيق داخلي وإدارة مخاطر تعزز الرقابة دون إبطاء الأعمال.",
+    },
+  },
+];
 
-/** Representative client portfolio for display. Replace with approved logos/names anytime. */
+export const services = expertise;
+
 export const clients: Client[] = [
   {
     id: "c1",
-    name: { en: "Najd Industrial Holding", ar: "نجد الصناعية القابضة" },
+    name: { en: "Najd Industrial", ar: "نجد الصناعية" },
     sector: { en: "Manufacturing", ar: "التصنيع" },
     location: { en: "Riyadh", ar: "الرياض" },
     focus: { en: "Audit · Zakat · Advisory", ar: "تدقيق · زكاة · استشارات" },
     initials: "NI",
+    logoColor: "#F58025",
   },
   {
     id: "c2",
-    name: { en: "Eastern Trading Company", ar: "شركة الشرقية للتجارة" },
+    name: { en: "Eastern Trading", ar: "الشرقية للتجارة" },
     sector: { en: "Trading", ar: "التجارة" },
     location: { en: "Dammam", ar: "الدمام" },
     focus: { en: "Tax · Accounting · VAT", ar: "ضرائب · محاسبة · ضريبة القيمة المضافة" },
     initials: "ET",
+    logoColor: "#353535",
   },
   {
     id: "c3",
-    name: { en: "Sahara Real Estate Group", ar: "مجموعة الصحراء العقارية" },
+    name: { en: "Sahara Realty", ar: "الصحراء العقارية" },
     sector: { en: "Real Estate", ar: "العقارات" },
     location: { en: "Riyadh", ar: "الرياض" },
-    focus: { en: "Off-plan · Audit · Advisory", ar: "على الخارطة · تدقيق · استشارات" },
+    focus: { en: "Off-plan · Audit", ar: "على الخارطة · تدقيق" },
     initials: "SR",
+    logoColor: "#1B6B93",
   },
   {
     id: "c4",
-    name: { en: "Gulf Contracting Partners", ar: "شركاء الخليج للمقاولات" },
+    name: { en: "Gulf Contracting", ar: "الخليج للمقاولات" },
     sector: { en: "Construction", ar: "المقاولات" },
     location: { en: "Al Khobar", ar: "الخبر" },
-    focus: { en: "Local Content · Audit · Risk", ar: "محتوى محلي · تدقيق · مخاطر" },
+    focus: { en: "Local Content · Audit", ar: "محتوى محلي · تدقيق" },
     initials: "GC",
+    logoColor: "#2F6B55",
   },
   {
     id: "c5",
-    name: { en: "Nordic Tech Arabia", ar: "نورديك تك العربية" },
+    name: { en: "Nordic Tech Arabia", ar: "نورديك تك" },
     sector: { en: "Technology", ar: "التقنية" },
     location: { en: "Riyadh", ar: "الرياض" },
-    focus: { en: "International subsidiary · Tax · Audit", ar: "شركة تابعة دولية · ضرائب · تدقيق" },
+    focus: { en: "International · Tax · Audit", ar: "دولي · ضرائب · تدقيق" },
     initials: "NT",
+    logoColor: "#5B4B8A",
   },
   {
     id: "c6",
-    name: { en: "Al Waha Family Office", ar: "مكتب الواحة العائلي" },
+    name: { en: "Al Waha Family Office", ar: "مكتب الواحة" },
     sector: { en: "Family Business", ar: "أعمال عائلية" },
     location: { en: "Riyadh", ar: "الرياض" },
-    focus: { en: "Corporate Finance · Advisory · Zakat", ar: "تمويل مؤسسي · استشارات · زكاة" },
+    focus: { en: "Corporate Finance · Advisory", ar: "تمويل مؤسسي · استشارات" },
     initials: "AW",
+    logoColor: "#B08A4A",
   },
   {
     id: "c7",
-    name: { en: "Peninsula Logistics", ar: "شبه الجزيرة للخدمات اللوجستية" },
+    name: { en: "Peninsula Logistics", ar: "شبه الجزيرة للوجستيات" },
     sector: { en: "Logistics", ar: "الخدمات اللوجستية" },
     location: { en: "Jeddah", ar: "جدة" },
-    focus: { en: "Accounting · Tax · Internal Audit", ar: "محاسبة · ضرائب · تدقيق داخلي" },
+    focus: { en: "Accounting · Tax", ar: "محاسبة · ضرائب" },
     initials: "PL",
+    logoColor: "#0E4D6B",
   },
   {
     id: "c8",
-    name: { en: "Horizon Healthcare Services", ar: "آفاق للخدمات الصحية" },
+    name: { en: "Horizon Healthcare", ar: "آفاق الصحية" },
     sector: { en: "Healthcare", ar: "الرعاية الصحية" },
     location: { en: "Riyadh", ar: "الرياض" },
     focus: { en: "Audit · Risk · Advisory", ar: "تدقيق · مخاطر · استشارات" },
     initials: "HH",
+    logoColor: "#C45C26",
   },
   {
     id: "c9",
-    name: { en: "Atlas Korea Trading KSA", ar: "أطلس كوريا للتجارة" },
+    name: { en: "Atlas Korea KSA", ar: "أطلس كوريا" },
     sector: { en: "International Trade", ar: "التجارة الدولية" },
     location: { en: "Dammam", ar: "الدمام" },
-    focus: { en: "Cross-border Tax · Audit · Accounting", ar: "ضرائب عابرة للحدود · تدقيق · محاسبة" },
+    focus: { en: "Cross-border Tax · Audit", ar: "ضرائب عابرة للحدود · تدقيق" },
     initials: "AK",
+    logoColor: "#8B1E3F",
   },
   {
     id: "c10",
-    name: { en: "Vision Energy Services", ar: "رؤية لخدمات الطاقة" },
+    name: { en: "Vision Energy", ar: "رؤية للطاقة" },
     sector: { en: "Energy Services", ar: "خدمات الطاقة" },
     location: { en: "Eastern Province", ar: "المنطقة الشرقية" },
-    focus: { en: "Local Content · Audit · Corporate Finance", ar: "محتوى محلي · تدقيق · تمويل مؤسسي" },
+    focus: { en: "Local Content · Audit", ar: "محتوى محلي · تدقيق" },
     initials: "VE",
+    logoColor: "#1F4E3D",
   },
   {
     id: "c11",
-    name: { en: "Cedar Professional Group", ar: "مجموعة الأرز المهنية" },
+    name: { en: "Cedar Professional", ar: "الأرز المهنية" },
     sector: { en: "Professional Services", ar: "الخدمات المهنية" },
     location: { en: "Riyadh", ar: "الرياض" },
     focus: { en: "Accounting · Tax · Advisory", ar: "محاسبة · ضرائب · استشارات" },
     initials: "CP",
+    logoColor: "#4A5568",
   },
   {
     id: "c12",
-    name: { en: "British Retail Ventures SA", ar: "المشاريع البريطانية للتجزئة" },
+    name: { en: "British Retail SA", ar: "التجزئة البريطانية" },
     sector: { en: "Retail", ar: "التجزئة" },
     location: { en: "Riyadh", ar: "الرياض" },
-    focus: { en: "VAT · Audit · International reporting", ar: "ضريبة القيمة المضافة · تدقيق · تقارير دولية" },
+    focus: { en: "VAT · Audit · Reporting", ar: "ضريبة القيمة المضافة · تدقيق · تقارير" },
     initials: "BR",
+    logoColor: "#9B2C2C",
   },
 ];
 
-export const clientSectors = [
-  { en: "All", ar: "الكل" },
-  { en: "Manufacturing", ar: "التصنيع" },
-  { en: "Trading", ar: "التجارة" },
-  { en: "Real Estate", ar: "العقارات" },
-  { en: "Construction", ar: "المقاولات" },
-  { en: "Technology", ar: "التقنية" },
-  { en: "Family Business", ar: "أعمال عائلية" },
-  { en: "Logistics", ar: "الخدمات اللوجستية" },
-  { en: "Healthcare", ar: "الرعاية الصحية" },
-  { en: "International Trade", ar: "التجارة الدولية" },
-  { en: "Energy Services", ar: "خدمات الطاقة" },
-  { en: "Professional Services", ar: "الخدمات المهنية" },
-  { en: "Retail", ar: "التجزئة" },
+export const insights: Insight[] = [
+  {
+    id: "i1",
+    date: { en: "May 20, 2024", ar: "20 مايو 2024" },
+    category: { en: "Tax", ar: "الضرائب" },
+    title: {
+      en: "ZATCA updates: What businesses need to know in 2024",
+      ar: "تحديثات هيئة الزكاة والضريبة والجمارك: ما تحتاج الشركات معرفته في 2024",
+    },
+    image:
+      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "i2",
+    date: { en: "Apr 8, 2024", ar: "8 أبريل 2024" },
+    category: { en: "Advisory", ar: "الاستشارات" },
+    title: {
+      en: "Local content readiness for Saudi procurement programmes",
+      ar: "جاهزية المحتوى المحلي لبرامج المشتريات السعودية",
+    },
+    image:
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "i3",
+    date: { en: "Mar 12, 2024", ar: "12 مارس 2024" },
+    category: { en: "Audit", ar: "التدقيق" },
+    title: {
+      en: "How middle-market leaders can prepare for stronger assurance",
+      ar: "كيف يستعد قادة السوق المتوسط لضمان أقوى",
+    },
+    image:
+      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=900&q=80",
+  },
 ];
 
 export const values = [
@@ -369,8 +379,8 @@ export const values = [
   {
     title: { en: "Entrepreneurial spirit", ar: "روح ريادية" },
     text: {
-      en: "Agile, practical counsel for middle-market leaders who need usable answers.",
-      ar: "مشورة عملية وسريعة لقادة السوق المتوسط ممن يحتاجون إجابات قابلة للتنفيذ.",
+      en: "Agile, practical counsel for leaders who need usable answers.",
+      ar: "مشورة عملية وسريعة للقادة ممن يحتاجون إجابات قابلة للتنفيذ.",
     },
   },
   {
@@ -387,8 +397,8 @@ export const contact = {
   phone: "+966 920 007 832",
   phoneHref: "tel:+966920007832",
   address: {
-    en: "Al Imam Saud Bin Faysal Road, Al Sahafah Dist, Riyadh 13321, Saudi Arabia",
-    ar: "طريق الإمام سعود بن فيصل، حي الصحافة، الرياض 13321، المملكة العربية السعودية",
+    en: "Kingdom Tower area · Al Sahafah Dist, Riyadh 13321, Saudi Arabia",
+    ar: "منطقة برج المملكة · حي الصحافة، الرياض 13321، المملكة العربية السعودية",
   },
   linkedin: "https://sa.linkedin.com/company/tgs-saudi-arabia",
   global: "https://tgs-global.com/",

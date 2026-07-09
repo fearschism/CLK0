@@ -1,50 +1,66 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { contact } from "../data";
+import { contact, expertise } from "../data";
 import { useCopy, useI18n } from "../i18n";
 
 export function Layout() {
   const { lang, toggleLang, t } = useI18n();
   const copy = useCopy();
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setOpen(false);
   }, [lang]);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   const links = [
     { to: "/", label: copy.nav.home },
-    { to: "/services", label: copy.nav.services },
-    { to: "/clients", label: copy.nav.clients },
     { to: "/about", label: copy.nav.about },
+    { to: "/services", label: copy.nav.expertise },
+    { to: "/clients", label: copy.nav.clients },
+    { to: `${base}/#insights`, label: copy.nav.insights, external: true },
     { to: "/contact", label: copy.nav.contact },
   ];
 
   return (
     <div className="site">
-      <header className="nav">
+      <header className={`nav ${scrolled ? "scrolled" : ""}`}>
         <div className="nav-inner">
           <Link to="/" className="brand" onClick={() => setOpen(false)}>
-            <span className="brand-mark">TGS</span>
-            TGS <em>Saudi</em>
+            <i className="dot" aria-hidden="true" />
+            tgs <span>Saudi Arabia</span>
           </Link>
 
           <nav className="nav-links" aria-label="Primary">
-            {links.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                end={link.to === "/"}
-                className={({ isActive }) => (isActive ? "active" : undefined)}
-              >
-                {t(link.label)}
-              </NavLink>
-            ))}
+            {links.map((link) =>
+              "external" in link && link.external ? (
+                <a key={link.to} href={link.to}>
+                  {t(link.label)}
+                </a>
+              ) : (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.to === "/"}
+                  className={({ isActive }) => (isActive ? "active" : undefined)}
+                >
+                  {t(link.label)}
+                </NavLink>
+              ),
+            )}
           </nav>
 
           <div className="nav-actions">
             <button className="lang-toggle" type="button" onClick={toggleLang}>
-              {lang === "en" ? "العربية" : "English"}
+              {lang === "en" ? "EN | AR" : "AR | EN"}
             </button>
             <Link className="btn btn-primary" to="/contact">
               {t(copy.nav.talk)}
@@ -64,11 +80,17 @@ export function Layout() {
 
       {open && (
         <div className="mobile-panel">
-          {links.map((link) => (
-            <NavLink key={link.to} to={link.to} onClick={() => setOpen(false)}>
-              {t(link.label)}
-            </NavLink>
-          ))}
+          {links.map((link) =>
+            "external" in link && link.external ? (
+              <a key={link.to} href={link.to} onClick={() => setOpen(false)}>
+                {t(link.label)}
+              </a>
+            ) : (
+              <NavLink key={link.to} to={link.to} onClick={() => setOpen(false)}>
+                {t(link.label)}
+              </NavLink>
+            ),
+          )}
           <button type="button" onClick={toggleLang}>
             {lang === "en" ? "العربية" : "English"}
           </button>
@@ -83,33 +105,66 @@ export function Layout() {
       </main>
 
       <footer className="footer">
-        <div className="container">
-          <div className="footer-top">
-            <div>
-              <div className="brand">
-                <span className="brand-mark">TGS</span>
-                TGS <em>Saudi</em>
-              </div>
-              <p style={{ marginTop: "0.75rem", maxWidth: "28rem" }}>
-                {t(copy.footer.tagline)}
-              </p>
+        <div className="container footer-grid">
+          <div className="footer-col">
+            <div className="brand">
+              <i className="dot" aria-hidden="true" />
+              tgs <span>Saudi Arabia</span>
             </div>
-            <div className="footer-links">
-              {links.map((link) => (
-                <Link key={link.to} to={link.to}>
-                  {t(link.label)}
-                </Link>
-              ))}
+            <p>{contact.address[lang]}</p>
+            <p>
+              <a href={contact.phoneHref}>{contact.phone}</a>
+            </p>
+            <p>
+              <a href={`mailto:${contact.email}`}>{contact.email}</a>
+            </p>
+            <div className="socials">
+              <a href={contact.linkedin} target="_blank" rel="noreferrer">
+                in
+              </a>
               <a href={contact.global} target="_blank" rel="noreferrer">
-                TGS Global
+                X
+              </a>
+              <a href={contact.global} target="_blank" rel="noreferrer">
+                YT
               </a>
             </div>
           </div>
-          <div className="footer-bottom">
-            <span>
-              © {new Date().getFullYear()} TGS Saudi. {t(copy.footer.rights)}
-            </span>
-            <a href={`mailto:${contact.email}`}>{contact.email}</a>
+
+          <div className="footer-col">
+            <h4>{t(copy.footer.information)}</h4>
+            <Link to="/about">{t(copy.nav.about)}</Link>
+            <Link to="/clients">{t(copy.nav.clients)}</Link>
+            <a href={`${base}/#insights`}>{t(copy.nav.insights)}</a>
+            <Link to="/contact">{t(copy.nav.contact)}</Link>
+          </div>
+
+          <div className="footer-col">
+            <h4>{t(copy.footer.expertise)}</h4>
+            {expertise.map((item) => (
+              <Link key={item.id} to={`/services#${item.id}`}>
+                {item.title[lang]}
+              </Link>
+            ))}
+          </div>
+
+          <div className="footer-col">
+            <h4>{t(copy.footer.contact)}</h4>
+            <p>{t(copy.footer.conversation)}</p>
+            <Link className="btn btn-outline" to="/contact" style={{ marginTop: "0.6rem", width: "fit-content" }}>
+              {t(copy.nav.talk)}
+            </Link>
+          </div>
+        </div>
+
+        <div className="container footer-bottom">
+          <span>
+            © {new Date().getFullYear()} TGS Saudi Arabia. {t(copy.footer.rights)}
+          </span>
+          <div>
+            <a href="#">{t(copy.footer.privacy)}</a>
+            <a href="#">{t(copy.footer.terms)}</a>
+            <a href="#">{t(copy.footer.cookies)}</a>
           </div>
         </div>
       </footer>

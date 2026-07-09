@@ -1,6 +1,7 @@
+import { Link } from "react-router-dom";
+import { Reveal } from "../components/Reveal";
 import { contact, values } from "../data";
 import { useCopy, useI18n } from "../i18n";
-import { Reveal } from "../components/Reveal";
 
 export function AboutPage() {
   const { lang, t } = useI18n();
@@ -17,49 +18,52 @@ export function AboutPage() {
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: "2.2rem" }}>
-        <div className="container knowhow-grid">
+      <section className="section" style={{ paddingTop: "2rem" }}>
+        <div className="container about-grid">
           <Reveal>
             <div>
-              <div className="section-head">
-                <span className="eyebrow">{t(copy.aboutPage.storyTitle)}</span>
-                <h2>{t(copy.home.aboutTitle)}</h2>
+              <div className="section-head" style={{ display: "block" }}>
+                <h2>{t(copy.aboutPage.storyTitle)}</h2>
                 <p>{t(copy.aboutPage.story)}</p>
               </div>
-              <div className="section-head" style={{ marginTop: "1.8rem" }}>
-                <span className="eyebrow">{t(copy.aboutPage.visionTitle)}</span>
-                <h2 style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.1rem)" }}>
-                  {t(copy.aboutPage.vision)}
-                </h2>
+              <div className="section-head" style={{ display: "block", marginTop: "1.5rem" }}>
+                <h2 style={{ fontSize: "1.6rem" }}>{t(copy.aboutPage.visionTitle)}</h2>
+                <p>{t(copy.aboutPage.vision)}</p>
               </div>
-            </div>
-          </Reveal>
-          <Reveal delay={90}>
-            <div
-              style={{
-                background: "var(--black)",
-                color: "#fff",
-                padding: "1.8rem 1.5rem",
-                minHeight: "280px",
-                display: "grid",
-                alignContent: "end",
-                gap: "0.7rem",
-              }}
-            >
-              <span className="eyebrow">{t(copy.aboutPage.networkTitle)}</span>
-              <h3 style={{ color: "#fff", fontSize: "1.8rem" }}>TGS</h3>
-              <p style={{ color: "rgba(255,255,255,0.75)" }}>
-                {t(copy.aboutPage.networkText)}
-              </p>
               <a
                 className="btn btn-primary"
                 href={contact.global}
                 target="_blank"
                 rel="noreferrer"
-                style={{ width: "fit-content", marginTop: "0.5rem" }}
+                style={{ marginTop: "1rem" }}
               >
-                tgs-global.com
+                {t(copy.home.networkCta)}
               </a>
+            </div>
+          </Reveal>
+          <Reveal delay={90}>
+            <div className="network-panel">
+              <h3>{t(copy.home.networkTitle)}</h3>
+              <div className="network-stats">
+                <div className="network-stat">
+                  <div>
+                    <strong>66</strong>
+                    <span>{t(copy.common.members)}</span>
+                  </div>
+                </div>
+                <div className="network-stat">
+                  <div>
+                    <strong>58</strong>
+                    <span>{t(copy.common.countries)}</span>
+                  </div>
+                </div>
+                <div className="network-stat">
+                  <div>
+                    <strong>266</strong>
+                    <span>{t(copy.common.hubs)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </Reveal>
         </div>
@@ -69,21 +73,18 @@ export function AboutPage() {
         <div className="container">
           <Reveal>
             <div className="section-head">
-              <span className="eyebrow">{t(copy.aboutPage.valuesTitle)}</span>
-              <h2>
-                {lang === "en"
-                  ? "How we work with clients."
-                  : "كيف نعمل مع عملائنا."}
-              </h2>
+              <h2>{t(copy.aboutPage.valuesTitle)}</h2>
             </div>
           </Reveal>
-          <div className="service-grid">
+          <div className="expertise-grid">
             {values.map((value, index) => (
               <Reveal key={value.title.en} delay={index * 60}>
-                <article className="service-tile">
-                  <div className="index">0{index + 1}</div>
+                <article className="expertise-card">
                   <h3>{value.title[lang]}</h3>
                   <p>{value.text[lang]}</p>
+                  <Link className="link-arrow" to="/contact">
+                    {t(copy.nav.talk)} →
+                  </Link>
                 </article>
               </Reveal>
             ))}

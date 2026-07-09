@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
+import { ClientMarquee } from "../components/ClientMarquee";
+import { Reveal } from "../components/Reveal";
 import { clients } from "../data";
 import { useCopy, useI18n } from "../i18n";
-import { Reveal } from "../components/Reveal";
 
 export function ClientsPage() {
   const { lang, t } = useI18n();
@@ -27,7 +28,9 @@ export function ClientsPage() {
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: "2.2rem" }}>
+      <ClientMarquee label={t(copy.home.trusted)} />
+
+      <section className="section" style={{ paddingTop: "2rem" }}>
         <div className="container">
           <div className="client-filters">
             {sectors.map((item) => {
@@ -52,7 +55,12 @@ export function ClientsPage() {
             {filtered.map((client, index) => (
               <Reveal key={client.id} delay={(index % 6) * 40}>
                 <article className="client-card">
-                  <div className="client-logo">{client.initials}</div>
+                  <div
+                    className="logo-mark"
+                    style={{ background: client.logoColor, width: 52, height: 52 }}
+                  >
+                    {client.initials}
+                  </div>
                   <h3>{client.name[lang]}</h3>
                   <div className="client-meta">
                     <span className="tag">{client.sector[lang]}</span>
