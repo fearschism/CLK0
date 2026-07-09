@@ -1,4 +1,4 @@
-import { values } from "../data";
+import { contact, values } from "../data";
 import { useCopy, useI18n } from "../i18n";
 import { Reveal } from "../components/Reveal";
 
@@ -17,8 +17,8 @@ export function AboutPage() {
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: "1.5rem" }}>
-        <div className="container split">
+      <section className="section" style={{ paddingTop: "2.2rem" }}>
+        <div className="container knowhow-grid">
           <Reveal>
             <div>
               <div className="section-head">
@@ -26,30 +26,46 @@ export function AboutPage() {
                 <h2>{t(copy.home.aboutTitle)}</h2>
                 <p>{t(copy.aboutPage.story)}</p>
               </div>
-              <div className="section-head" style={{ marginTop: "2rem" }}>
+              <div className="section-head" style={{ marginTop: "1.8rem" }}>
                 <span className="eyebrow">{t(copy.aboutPage.visionTitle)}</span>
-                <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.6rem)" }}>
+                <h2 style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.1rem)" }}>
                   {t(copy.aboutPage.vision)}
                 </h2>
               </div>
             </div>
           </Reveal>
-          <Reveal delay={100}>
-            <div className="panel">
-              <div className="panel-copy">
-                <strong>TGS</strong>
-                <p>
-                  {lang === "en"
-                    ? "Independent member firm · Accounting, audit, tax, advisory & commercial legal network"
-                    : "مكتب عضو مستقل · شبكة محاسبة وتدقيق وضرائب واستشارات وخدمات قانونية تجارية"}
-                </p>
-              </div>
+          <Reveal delay={90}>
+            <div
+              style={{
+                background: "var(--black)",
+                color: "#fff",
+                padding: "1.8rem 1.5rem",
+                minHeight: "280px",
+                display: "grid",
+                alignContent: "end",
+                gap: "0.7rem",
+              }}
+            >
+              <span className="eyebrow">{t(copy.aboutPage.networkTitle)}</span>
+              <h3 style={{ color: "#fff", fontSize: "1.8rem" }}>TGS</h3>
+              <p style={{ color: "rgba(255,255,255,0.75)" }}>
+                {t(copy.aboutPage.networkText)}
+              </p>
+              <a
+                className="btn btn-primary"
+                href={contact.global}
+                target="_blank"
+                rel="noreferrer"
+                style={{ width: "fit-content", marginTop: "0.5rem" }}
+              >
+                tgs-global.com
+              </a>
             </div>
           </Reveal>
         </div>
       </section>
 
-      <section className="section band-sand">
+      <section className="section band-muted">
         <div className="container">
           <Reveal>
             <div className="section-head">
@@ -61,13 +77,14 @@ export function AboutPage() {
               </h2>
             </div>
           </Reveal>
-          <div className="values">
+          <div className="service-grid">
             {values.map((value, index) => (
-              <Reveal key={value.title.en} delay={index * 70}>
-                <div className="value-row">
+              <Reveal key={value.title.en} delay={index * 60}>
+                <article className="service-tile">
+                  <div className="index">0{index + 1}</div>
                   <h3>{value.title[lang]}</h3>
                   <p>{value.text[lang]}</p>
-                </div>
+                </article>
               </Reveal>
             ))}
           </div>

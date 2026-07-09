@@ -37,7 +37,7 @@ export function ContactPage() {
         </div>
       </section>
 
-      <section className="section" style={{ paddingTop: "1rem" }}>
+      <section className="section" style={{ paddingTop: "2rem" }}>
         <div className="container contact-grid">
           <Reveal>
             <div className="contact-list">
@@ -53,10 +53,16 @@ export function ContactPage() {
                 <span>{t(copy.contactPage.office)}</span>
                 <p>{contact.address[lang]}</p>
               </div>
+              <div className="contact-item">
+                <span>{t(copy.contactPage.network)}</span>
+                <a href={contact.global} target="_blank" rel="noreferrer">
+                  tgs-global.com
+                </a>
+              </div>
             </div>
           </Reveal>
 
-          <Reveal delay={100}>
+          <Reveal delay={90}>
             <form className="form" onSubmit={onSubmit}>
               <label>
                 {t(copy.contactPage.name)}

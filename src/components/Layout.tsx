@@ -6,15 +6,7 @@ import { useCopy, useI18n } from "../i18n";
 export function Layout() {
   const { lang, toggleLang, t } = useI18n();
   const copy = useCopy();
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     setOpen(false);
@@ -23,16 +15,18 @@ export function Layout() {
   const links = [
     { to: "/", label: copy.nav.home },
     { to: "/services", label: copy.nav.services },
+    { to: "/clients", label: copy.nav.clients },
     { to: "/about", label: copy.nav.about },
     { to: "/contact", label: copy.nav.contact },
   ];
 
   return (
     <div className="site">
-      <header className={`nav ${scrolled ? "scrolled" : ""}`}>
+      <header className="nav">
         <div className="nav-inner">
           <Link to="/" className="brand" onClick={() => setOpen(false)}>
-            TGS <span>Saudi</span>
+            <span className="brand-mark">TGS</span>
+            TGS <em>Saudi</em>
           </Link>
 
           <nav className="nav-links" aria-label="Primary">
@@ -75,7 +69,7 @@ export function Layout() {
               {t(link.label)}
             </NavLink>
           ))}
-          <button className="lang-toggle" type="button" onClick={toggleLang}>
+          <button type="button" onClick={toggleLang}>
             {lang === "en" ? "العربية" : "English"}
           </button>
           <Link className="btn btn-primary" to="/contact" onClick={() => setOpen(false)}>
@@ -93,9 +87,10 @@ export function Layout() {
           <div className="footer-top">
             <div>
               <div className="brand">
-                TGS <span>Saudi</span>
+                <span className="brand-mark">TGS</span>
+                TGS <em>Saudi</em>
               </div>
-              <p style={{ marginTop: "0.7rem", maxWidth: "28rem" }}>
+              <p style={{ marginTop: "0.75rem", maxWidth: "28rem" }}>
                 {t(copy.footer.tagline)}
               </p>
             </div>
@@ -105,8 +100,8 @@ export function Layout() {
                   {t(link.label)}
                 </Link>
               ))}
-              <a href={contact.linkedin} target="_blank" rel="noreferrer">
-                LinkedIn
+              <a href={contact.global} target="_blank" rel="noreferrer">
+                TGS Global
               </a>
             </div>
           </div>
