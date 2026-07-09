@@ -1,0 +1,123 @@
+import { useEffect, useState } from "react";
+import { Link, NavLink, Outlet } from "react-router-dom";
+import { contact } from "../data";
+import { useCopy, useI18n } from "../i18n";
+
+export function Layout() {
+  const { lang, toggleLang, t } = useI18n();
+  const copy = useCopy();
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [lang]);
+
+  const links = [
+    { to: "/", label: copy.nav.home },
+    { to: "/services", label: copy.nav.services },
+    { to: "/about", label: copy.nav.about },
+    { to: "/contact", label: copy.nav.contact },
+  ];
+
+  return (
+    <div className="site">
+      <header className={`nav ${scrolled ? "scrolled" : ""}`}>
+        <div className="nav-inner">
+          <Link to="/" className="brand" onClick={() => setOpen(false)}>
+            TGS <span>Saudi</span>
+          </Link>
+
+          <nav className="nav-links" aria-label="Primary">
+            {links.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.to === "/"}
+                className={({ isActive }) => (isActive ? "active" : undefined)}
+              >
+                {t(link.label)}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="nav-actions">
+            <button className="lang-toggle" type="button" onClick={toggleLang}>
+              {lang === "en" ? "العربية" : "English"}
+            </button>
+            <Link className="btn btn-primary" to="/contact">
+              {t(copy.nav.talk)}
+            </Link>
+            <button
+              className="menu-toggle"
+              type="button"
+              aria-expanded={open}
+              aria-label="Menu"
+              onClick={() => setOpen((v) => !v)}
+            >
+              {open ? "Close" : "Menu"}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {open && (
+        <div className="mobile-panel">
+          {links.map((link) => (
+            <NavLink key={link.to} to={link.to} onClick={() => setOpen(false)}>
+              {t(link.label)}
+            </NavLink>
+          ))}
+          <button className="lang-toggle" type="button" onClick={toggleLang}>
+            {lang === "en" ? "العربية" : "English"}
+          </button>
+          <Link className="btn btn-primary" to="/contact" onClick={() => setOpen(false)}>
+            {t(copy.nav.talk)}
+          </Link>
+        </div>
+      )}
+
+      <main>
+        <Outlet />
+      </main>
+
+      <footer className="footer">
+        <div className="container">
+          <div className="footer-top">
+            <div>
+              <div className="brand">
+                TGS <span>Saudi</span>
+              </div>
+              <p style={{ marginTop: "0.7rem", maxWidth: "28rem" }}>
+                {t(copy.footer.tagline)}
+              </p>
+            </div>
+            <div className="footer-links">
+              {links.map((link) => (
+                <Link key={link.to} to={link.to}>
+                  {t(link.label)}
+                </Link>
+              ))}
+              <a href={contact.linkedin} target="_blank" rel="noreferrer">
+                LinkedIn
+              </a>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <span>
+              © {new Date().getFullYear()} TGS Saudi. {t(copy.footer.rights)}
+            </span>
+            <a href={`mailto:${contact.email}`}>{contact.email}</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
