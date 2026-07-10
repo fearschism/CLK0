@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ClientMarquee } from "../components/ClientMarquee";
+import { HeroDots } from "../components/HeroDots";
 import { Icon } from "../components/Icons";
 import { Reveal } from "../components/Reveal";
 import { contact, expertise, insights, pillars } from "../data";
@@ -12,6 +13,7 @@ export function HomePage() {
   return (
     <>
       <section className="hero">
+        <HeroDots />
         <div className="container hero-grid">
           <div>
             <span className="hero-kicker">{t(copy.home.kicker)}</span>

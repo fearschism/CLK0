@@ -260,7 +260,18 @@ p {
   overflow: hidden;
 }
 
+.hero-dots {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .hero-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   gap: 2.5rem;
@@ -1006,9 +1017,9 @@ body.rtl .expertise-track {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: linear-gradient(135deg, #24170d 0%, var(--dark) 42%, #6e320b 100%);
-  color: rgba(255, 255, 255, 0.82);
-  padding: 3.4rem 0 1.4rem;
+  background: linear-gradient(180deg, #ffffff 0%, var(--orange-soft) 38%, #ffdcbe 72%, #ffc796 100%);
+  color: var(--ink-soft);
+  padding: 4.2rem 0 1.4rem;
 }
 
 .footer::before,
@@ -1018,24 +1029,24 @@ body.rtl .expertise-track {
   border-radius: 50%;
   z-index: -1;
   pointer-events: none;
-  animation: blobFloat 9s ease-in-out infinite alternate;
+  animation: blobFloat 10s ease-in-out infinite alternate;
 }
 
 .footer::before {
-  width: 460px;
-  height: 460px;
-  top: -190px;
-  inset-inline-end: -110px;
-  background: radial-gradient(circle at 32% 32%, rgba(245, 128, 37, 0.55), rgba(245, 128, 37, 0) 68%);
+  width: 540px;
+  height: 540px;
+  bottom: -250px;
+  inset-inline-end: -150px;
+  background: radial-gradient(circle at 50% 50%, rgba(245, 128, 37, 0.5), rgba(245, 128, 37, 0) 70%);
 }
 
 .footer::after {
-  width: 360px;
-  height: 360px;
-  bottom: -170px;
-  inset-inline-start: -90px;
-  background: radial-gradient(circle at 50% 50%, rgba(224, 106, 18, 0.42), rgba(224, 106, 18, 0) 70%);
-  animation-delay: -4.5s;
+  width: 420px;
+  height: 420px;
+  bottom: -200px;
+  inset-inline-start: -140px;
+  background: radial-gradient(circle at 50% 50%, rgba(224, 106, 18, 0.35), rgba(224, 106, 18, 0) 70%);
+  animation-delay: -5s;
 }
 
 .footer .container {
@@ -1048,21 +1059,17 @@ body.rtl .expertise-track {
   grid-template-columns: 1.3fr 0.8fr 0.8fr 1fr;
   gap: 1.8rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.footer .brand {
-  color: #fff;
-}
-
-.footer .brand span {
-  color: rgba(255, 255, 255, 0.65);
+  border-bottom: 1px solid rgba(43, 43, 43, 0.12);
 }
 
 .footer h4 {
-  color: #fff;
+  color: var(--ink);
   font-size: 1rem;
   margin-bottom: 0.9rem;
+}
+
+.footer-col a {
+  color: var(--ink);
 }
 
 .footer-col {
@@ -1101,7 +1108,8 @@ body.rtl .expertise-track {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(43, 43, 43, 0.2);
+  color: var(--ink);
   display: grid;
   place-items: center;
   font-size: 0.75rem;
