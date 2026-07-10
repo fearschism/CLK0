@@ -292,6 +292,36 @@ p {
   font-size: clamp(2.6rem, 5.5vw, 4.2rem);
   max-width: 12ch;
   margin-bottom: 1rem;
+  color: var(--ink);
+  cursor: default;
+  transition: filter 0.4s ease;
+}
+
+.hero h1:hover {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(
+    110deg,
+    var(--orange-deep) 0%,
+    var(--orange) 40%,
+    #ffdcb4 50%,
+    var(--orange) 60%,
+    var(--orange-deep) 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 10px 30px rgba(245, 128, 37, 0.35));
+  animation: heroBeam 1.1s ease-out;
+}
+
+@keyframes heroBeam {
+  from {
+    background-position: 130% 0;
+  }
+  to {
+    background-position: -30% 0;
+  }
 }
 
 .hero-lead {
@@ -309,12 +339,12 @@ p {
 
 .hero-visual {
   position: relative;
-  min-height: 420px;
+  min-height: 360px;
 }
 
 .hero-blob {
   position: absolute;
-  inset: 8% 0 0 8%;
+  inset: 14% 8% 8% 16%;
   border-radius: 42% 58% 48% 52% / 48% 42% 58% 52%;
   background: var(--orange);
   opacity: 0.95;
@@ -322,7 +352,7 @@ p {
 }
 
 .hero-blob.soft {
-  inset: 18% -4% -4% 22%;
+  inset: 22% 3% 2% 30%;
   background: #ffb06a;
   opacity: 0.55;
   animation-delay: -3s;
@@ -330,7 +360,7 @@ p {
 
 .hero-photo {
   position: absolute;
-  inset: 0 0 8% 12%;
+  inset: 7% 8% 15% 22%;
   border-radius: 48% 52% 46% 54% / 54% 46% 54% 46%;
   overflow: hidden;
   box-shadow: var(--shadow);
