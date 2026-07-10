@@ -560,14 +560,6 @@ body.rtl .expertise-track {
   width: 300px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .expertise-track {
-    animation: none;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-}
-
 /* Team */
 .team-grid {
   display: grid;
