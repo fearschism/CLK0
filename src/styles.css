@@ -544,7 +544,7 @@ body.rtl .marquee-track {
   display: flex;
   width: max-content;
   gap: 1.1rem;
-  animation: marquee 46s linear infinite;
+  animation: marquee 28s linear infinite;
 }
 
 body.rtl .expertise-track {
