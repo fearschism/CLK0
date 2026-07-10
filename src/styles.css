@@ -117,30 +117,35 @@ p {
   gap: 1rem;
 }
 
-.brand {
+.brand-logo {
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.35rem;
-  font-weight: 800;
-  font-size: 1.35rem;
-  letter-spacing: -0.03em;
-  color: var(--ink);
+  align-items: center;
+  text-decoration: none;
 }
 
-.brand .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--orange);
-  display: inline-block;
-  margin-inline-end: 0.15rem;
-  transform: translateY(-1px);
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  line-height: 1;
+  user-select: none;
 }
 
-.brand span {
+.logo-mark {
+  display: block;
+  height: 2.4em;
+  width: auto;
+}
+
+.logo-word {
   font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--ink-soft);
+  font-size: 1.5em;
+  letter-spacing: -0.01em;
+  color: var(--orange);
+}
+
+.brand-logo .logo {
+  font-size: 1rem;
 }
 
 .nav-links {
