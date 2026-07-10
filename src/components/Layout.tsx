@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { contact, expertise } from "../data";
 import { useCopy, useI18n } from "../i18n";
+import { Logo } from "./Logo";
 
 export function Layout() {
   const { lang, toggleLang, t } = useI18n();
@@ -34,9 +35,8 @@ export function Layout() {
     <div className="site">
       <header className={`nav ${scrolled ? "scrolled" : ""}`}>
         <div className="nav-inner">
-          <Link to="/" className="brand" onClick={() => setOpen(false)}>
-            <i className="dot" aria-hidden="true" />
-            tgs <span>Saudi Arabia</span>
+          <Link to="/" className="brand-logo" onClick={() => setOpen(false)}>
+            <Logo />
           </Link>
 
           <nav className="nav-links" aria-label="Primary">
@@ -107,9 +107,8 @@ export function Layout() {
       <footer className="footer">
         <div className="container footer-grid">
           <div className="footer-col">
-            <div className="brand">
-              <i className="dot" aria-hidden="true" />
-              tgs <span>Saudi Arabia</span>
+            <div className="brand-logo">
+              <Logo variant="light" />
             </div>
             <p>{contact.address[lang]}</p>
             <p>
