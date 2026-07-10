@@ -121,6 +121,8 @@ const copy = {
       ar: "مسودة بريدك جاهزة. أرسلها متى شئت.",
     },
     select: { en: "Select a service", ar: "اختر خدمة" },
+    locationLabel: { en: "Our office", ar: "مكتبنا" },
+    openMap: { en: "Open in Google Maps", ar: "افتح في خرائط جوجل" },
   },
   footer: {
     information: { en: "Information", ar: "معلومات" },

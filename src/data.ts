@@ -410,14 +410,22 @@ export const team: TeamMember[] = [
   },
 ];
 
+const mapQuery =
+  "TGS Saudi Arabia, Al Imam Saud Bin Faysal Road, Al Sahafah District, Riyadh 13321, Saudi Arabia";
+// Al Sahafah District, north Riyadh
+const mapLat = 24.8009;
+const mapLon = 46.6491;
+
 export const contact = {
   email: "info@tgs-saudi.com",
   phone: "+966 920 007 832",
   phoneHref: "tel:+966920007832",
   address: {
-    en: "Kingdom Tower area · Al Sahafah Dist, Riyadh 13321, Saudi Arabia",
-    ar: "منطقة برج المملكة · حي الصحافة، الرياض 13321، المملكة العربية السعودية",
+    en: "Al Imam Saud Bin Faysal Road · Al Sahafah District, Riyadh 13321, Saudi Arabia",
+    ar: "طريق الإمام سعود بن فيصل · حي الصحافة، الرياض 13321، المملكة العربية السعودية",
   },
+  mapEmbed: `https://www.openstreetmap.org/export/embed.html?bbox=${mapLon - 0.012}%2C${mapLat - 0.008}%2C${mapLon + 0.012}%2C${mapLat + 0.008}&layer=mapnik&marker=${mapLat}%2C${mapLon}`,
+  mapLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`,
   linkedin: "https://sa.linkedin.com/company/tgs-saudi-arabia",
   global: "https://tgs-global.com/",
 };

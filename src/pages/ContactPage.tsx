@@ -40,25 +40,25 @@ export function ContactPage() {
       <section className="section" style={{ paddingTop: "1.5rem" }}>
         <div className="container contact-grid">
           <Reveal>
-            <div className="contact-list">
-              <div className="contact-item">
-                <span>{t(copy.contactPage.email)}</span>
-                <a href={`mailto:${contact.email}`}>{contact.email}</a>
-              </div>
-              <div className="contact-item">
-                <span>{t(copy.contactPage.phone)}</span>
-                <a href={contact.phoneHref}>{contact.phone}</a>
-              </div>
-              <div className="contact-item">
-                <span>{t(copy.contactPage.office)}</span>
-                <p>{contact.address[lang]}</p>
-              </div>
-              <div className="contact-item">
-                <span>{t(copy.contactPage.network)}</span>
-                <a href={contact.global} target="_blank" rel="noreferrer">
-                  tgs-global.com
-                </a>
-              </div>
+            <div className="contact-map">
+              <iframe
+                title="TGS Saudi Arabia — Riyadh office"
+                src={contact.mapEmbed}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <a
+                className="map-pin-card"
+                href={contact.mapLink}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span className="map-pin-label">{t(copy.contactPage.locationLabel)}</span>
+                <strong>TGS Saudi Arabia</strong>
+                <span className="map-pin-address">{contact.address[lang]}</span>
+                <span className="map-pin-cta">{t(copy.contactPage.openMap)} →</span>
+              </a>
             </div>
           </Reveal>
 
