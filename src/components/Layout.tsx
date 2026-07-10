@@ -108,7 +108,7 @@ export function Layout() {
         <div className="container footer-grid">
           <div className="footer-col">
             <div className="brand-logo">
-              <Logo variant="light" />
+              <Logo />
             </div>
             <p>{contact.address[lang]}</p>
             <p>

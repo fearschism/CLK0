@@ -126,34 +126,22 @@ p {
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   line-height: 1;
   user-select: none;
 }
 
 .logo-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--orange);
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.02em;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  padding: 0.34em 0.42em 0.4em;
-  border-radius: 0.42em;
+  display: block;
+  height: 2.4em;
+  width: auto;
 }
 
 .logo-word {
   font-weight: 600;
   font-size: 1.5em;
   letter-spacing: -0.01em;
-  color: var(--ink);
-}
-
-.logo-light .logo-word {
-  color: #fff;
+  color: var(--orange);
 }
 
 .brand-logo .logo {
