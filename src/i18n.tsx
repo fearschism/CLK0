@@ -31,8 +31,8 @@ const copy = {
     kicker: { en: "Think Global Sustainability", ar: "فكر عالميًا باستدامة" },
     title: { en: "TGS Saudi Arabia", ar: "تي جي إس السعودية" },
     lead: {
-      en: "Integrated advisory, audit, legal and tax services for organisations building and growing across Saudi Arabia and the GCC.",
-      ar: "خدمات استشارية وتدقيق وقانونية وضريبية متكاملة للمنشآت التي تبني وتنمو عبر السعودية ودول الخليج.",
+      en: "Integrated audit, zakat, tax, and advisory services for organisations building and growing across Saudi Arabia and the GCC.",
+      ar: "خدمات متكاملة في التدقيق والزكاة والضرائب والاستشارات للمنشآت التي تبني وتنمو عبر السعودية ودول الخليج.",
     },
     ctaPrimary: { en: "Get to know us", ar: "تعرّف علينا" },
     ctaSecondary: { en: "How we can help", ar: "كيف نساعدك" },
@@ -87,6 +87,15 @@ const copy = {
       ar: "أن نكون المستشار المفضل لقادة السوق المتوسط — في السعودية وعبر شبكة TGS عالميًا.",
     },
     valuesTitle: { en: "Values", ar: "قيمنا" },
+    teamTitle: { en: "Our team", ar: "فريقنا" },
+    teamLead: {
+      en: "The people behind our audit, zakat, tax, and advisory work in the Kingdom.",
+      ar: "الأشخاص الذين يقودون أعمالنا في التدقيق والزكاة والضرائب والاستشارات في المملكة.",
+    },
+    teamNote: {
+      en: "Team profiles shown are placeholders for this website demo. Replace with approved names, roles, photos, and bios before production launch.",
+      ar: "الملفات المعروضة للفريق هي عناصر مؤقتة لهذا الموقع التجريبي. استبدلها بالأسماء والمسميات والصور والسير المعتمدة قبل الإطلاق النهائي.",
+    },
   },
   contactPage: {
     title: { en: "Contact", ar: "تواصل" },

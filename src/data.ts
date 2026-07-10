@@ -26,6 +26,15 @@ export type Insight = {
   image: string;
 };
 
+export type TeamMember = {
+  id: string;
+  name: { en: string; ar: string };
+  role: { en: string; ar: string };
+  achievements: { en: string; ar: string };
+  initials: string;
+  photo?: string;
+};
+
 export const pillars = [
   {
     id: "establish",
@@ -122,66 +131,24 @@ export const expertise: Service[] = [
   },
   {
     id: "tax",
-    title: { en: "Tax & Zakat", ar: "الضرائب والزكاة" },
+    title: { en: "Zakat & Tax", ar: "الزكاة والضرائب" },
     summary: {
-      en: "Corporate tax, VAT, and zakat guidance aligned with ZATCA requirements.",
-      ar: "ضريبة الشركات وضريبة القيمة المضافة والزكاة وفق متطلبات هيئة الزكاة والضريبة والجمارك.",
+      en: "Zakat, corporate tax, and VAT support aligned with ZATCA requirements — from registration to filing and representation.",
+      ar: "دعم الزكاة وضريبة الشركات وضريبة القيمة المضافة وفق متطلبات هيئة الزكاة والضريبة والجمارك — من التسجيل إلى الإقرار والتمثيل.",
     },
     details: {
       en: [
+        "Zakat computation, declaration, and ZATCA filing",
         "Corporate income tax and VAT advisory",
-        "Zakat computation and filing support",
-        "Cross-border tax considerations",
+        "Support and representation during ZATCA reviews",
       ],
       ar: [
+        "احتساب الزكاة وإعداد الإقرار والتقديم عبر هيئة الزكاة والضريبة والجمارك",
         "استشارات ضريبة الدخل وضريبة القيمة المضافة",
-        "احتساب الزكاة ودعم الإقرارات",
-        "اعتبارات ضريبية عابرة للحدود",
+        "الدعم والتمثيل أثناء مراجعات هيئة الزكاة والضريبة والجمارك",
       ],
     },
     icon: "tax",
-  },
-  {
-    id: "legal",
-    title: { en: "Legal", ar: "القانونية" },
-    summary: {
-      en: "Commercial legal support through the TGS network for contracts, structuring, and compliance.",
-      ar: "دعم قانوني تجاري عبر شبكة TGS للعقود والهيكلة والامتثال.",
-    },
-    details: {
-      en: [
-        "Commercial contracts and corporate matters",
-        "Structuring support for local and cross-border work",
-        "Coordination with TGS legal member firms",
-      ],
-      ar: [
-        "العقود التجارية والشؤون المؤسسية",
-        "دعم الهيكلة للعمل المحلي والعابر للحدود",
-        "التنسيق مع مكاتب TGS القانونية الأعضاء",
-      ],
-    },
-    icon: "legal",
-  },
-  {
-    id: "digital",
-    title: { en: "Digital & IT", ar: "الرقمنة وتقنية المعلومات" },
-    summary: {
-      en: "Technology-minded support to modernise finance operations and reporting reliability.",
-      ar: "دعم تقني لتحديث عمليات المالية وموثوقية التقارير.",
-    },
-    details: {
-      en: [
-        "Systems and process improvement",
-        "Reporting and data integrity support",
-        "Digital enablement for finance teams",
-      ],
-      ar: [
-        "تحسين الأنظمة والعمليات",
-        "دعم التقارير وسلامة البيانات",
-        "تمكين رقمي لفرق المالية",
-      ],
-    },
-    icon: "digital",
   },
 ];
 
@@ -208,6 +175,14 @@ export const specialisations = [
     summary: {
       en: "Internal audit and risk management that strengthens controls without slowing the business.",
       ar: "تدقيق داخلي وإدارة مخاطر تعزز الرقابة دون إبطاء الأعمال.",
+    },
+  },
+  {
+    id: "corporate-finance",
+    title: { en: "Corporate Finance", ar: "التمويل المؤسسي" },
+    summary: {
+      en: "Transaction, feasibility, and corporate finance support for growth and investment decisions.",
+      ar: "دعم الصفقات ودراسات الجدوى والتمويل المؤسسي لقرارات النمو والاستثمار.",
     },
   },
 ];
@@ -389,6 +364,49 @@ export const values = [
       en: "Independent member of TGS — accounting, audit, tax, advisory, and commercial legal.",
       ar: "عضو مستقل في TGS — محاسبة وتدقيق وضرائب واستشارات وخدمات قانونية تجارية.",
     },
+  },
+];
+
+export const team: TeamMember[] = [
+  {
+    id: "t1",
+    name: { en: "Managing Partner", ar: "الشريك الإداري" },
+    role: { en: "Audit & Assurance", ar: "التدقيق والضمان" },
+    achievements: {
+      en: "Leads the firm's audit practice with 20+ years across statutory audits for Saudi groups and international engagements aligned with TGS quality standards.",
+      ar: "يقود ممارسة التدقيق في المكتب بخبرة تتجاوز 20 عامًا في تدقيق القوائم النظامية للمجموعات السعودية والارتباطات الدولية وفق معايير الجودة في TGS.",
+    },
+    initials: "MP",
+  },
+  {
+    id: "t2",
+    name: { en: "Partner", ar: "شريك" },
+    role: { en: "Zakat & Tax", ar: "الزكاة والضرائب" },
+    achievements: {
+      en: "Advises clients on Zakat, corporate tax, and VAT, with a track record of successful ZATCA filings and dispute representation.",
+      ar: "يقدّم الاستشارات في الزكاة وضريبة الشركات وضريبة القيمة المضافة، مع سجل ناجح في الإقرارات لدى هيئة الزكاة والضريبة والجمارك وتمثيل المنازعات.",
+    },
+    initials: "P",
+  },
+  {
+    id: "t3",
+    name: { en: "Partner", ar: "شريك" },
+    role: { en: "Advisory & Corporate Finance", ar: "الاستشارات والتمويل المؤسسي" },
+    achievements: {
+      en: "Supports middle-market leaders on growth strategy, feasibility studies, and transactions across the Kingdom and the GCC.",
+      ar: "يدعم قادة السوق المتوسط في استراتيجية النمو ودراسات الجدوى والصفقات عبر المملكة ودول الخليج.",
+    },
+    initials: "P",
+  },
+  {
+    id: "t4",
+    name: { en: "Director", ar: "مدير" },
+    role: { en: "Internal Audit & Risk", ar: "التدقيق الداخلي والمخاطر" },
+    achievements: {
+      en: "Builds internal audit and risk frameworks that strengthen governance and controls for local content and regulated engagements.",
+      ar: "يبني أطر التدقيق الداخلي والمخاطر التي تعزز الحوكمة والرقابة لارتباطات المحتوى المحلي والقطاعات المنظمة.",
+    },
+    initials: "D",
   },
 ];
 

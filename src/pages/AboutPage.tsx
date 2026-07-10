@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Reveal } from "../components/Reveal";
-import { contact, values } from "../data";
+import { contact, team, values } from "../data";
 import { useCopy, useI18n } from "../i18n";
 
 export function AboutPage() {
@@ -89,6 +89,38 @@ export function AboutPage() {
               </Reveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <Reveal>
+            <div className="section-head" style={{ display: "block" }}>
+              <h2>{t(copy.aboutPage.teamTitle)}</h2>
+              <p>{t(copy.aboutPage.teamLead)}</p>
+            </div>
+          </Reveal>
+          <div className="team-grid">
+            {team.map((member, index) => (
+              <Reveal key={member.id} delay={index * 60}>
+                <article className="team-card">
+                  <div className="team-photo" aria-hidden="true">
+                    {member.photo ? (
+                      <img src={member.photo} alt="" />
+                    ) : (
+                      <span className="team-initials">{member.initials}</span>
+                    )}
+                  </div>
+                  <h3>{member.name[lang]}</h3>
+                  <span className="team-role">{member.role[lang]}</span>
+                  <p>{member.achievements[lang]}</p>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+          <Reveal>
+            <p className="team-note">{t(copy.aboutPage.teamNote)}</p>
+          </Reveal>
         </div>
       </section>
     </>
