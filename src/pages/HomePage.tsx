@@ -72,10 +72,10 @@ export function HomePage() {
               </Link>
             </div>
           </Reveal>
-          <div className="expertise-grid">
-            {expertise.map((service, index) => (
-              <Reveal key={service.id} delay={(index % 3) * 60}>
-                <article className="expertise-card">
+          <div className="expertise-marquee">
+            <div className="expertise-track">
+              {[...expertise, ...expertise].map((service, index) => (
+                <article className="expertise-card" key={`${service.id}-${index}`}>
                   <div className="icon-outline">
                     <Icon name={service.icon} />
                   </div>
@@ -85,8 +85,8 @@ export function HomePage() {
                     {t(copy.home.readMore)} →
                   </Link>
                 </article>
-              </Reveal>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
