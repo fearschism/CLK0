@@ -1,9 +1,7 @@
-import { clients } from "../data";
-import { useI18n } from "../i18n";
+import { approvedClientLogos } from "../data";
 
 export function ClientMarquee({ label }: { label: string }) {
-  const { lang } = useI18n();
-  const loop = [...clients, ...clients];
+  const loop = [...approvedClientLogos, ...approvedClientLogos];
 
   return (
     <section className="marquee-section" aria-label={label}>
@@ -11,18 +9,8 @@ export function ClientMarquee({ label }: { label: string }) {
       <div className="marquee">
         <div className="marquee-track">
           {loop.map((client, index) => (
-            <div className="logo-chip" key={`${client.id}-${index}`}>
-              <div
-                className="logo-mark"
-                style={{ background: client.logoColor }}
-                aria-hidden="true"
-              >
-                {client.initials}
-              </div>
-              <div>
-                <strong>{client.name[lang]}</strong>
-                <small>{client.sector[lang]}</small>
-              </div>
+            <div className={`logo-chip logo-chip-${client.theme || "light"}`} key={`${client.id}-${index}`}>
+              <img src={client.logo} alt={client.name} loading="lazy" />
             </div>
           ))}
         </div>
