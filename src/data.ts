@@ -18,6 +18,32 @@ export type Client = {
   logoColor: string;
 };
 
+export type ClientLogo = {
+  id: string;
+  name: string;
+  logo: string;
+  theme?: "light" | "dark";
+};
+
+const clientLogo = (file: string) => `${import.meta.env.BASE_URL}client-logos/${file}`;
+
+export const approvedClientLogos: ClientLogo[] = [
+  { id: "ezdihar", name: "Ezdihar", logo: clientLogo("ezdihar.svg"), theme: "dark" },
+  { id: "client-brand", name: "TGS Saudi client", logo: clientLogo("client-brand.svg") },
+  { id: "sheraton", name: "Sheraton", logo: clientLogo("sheraton.svg") },
+  { id: "sumou", name: "Sumou", logo: clientLogo("sumou.png") },
+  { id: "srei", name: "Saudi Real Estate Infrastructure Company", logo: clientLogo("saudi-real-estate-infrastructure.png") },
+  { id: "ladun", name: "Ladun Investment Company", logo: clientLogo("ladun-investment.png") },
+  { id: "pankindom", name: "Pankindom Real Estate", logo: clientLogo("pankindom-real-estate.png") },
+  { id: "aknann", name: "Aknann", logo: clientLogo("aknann.png") },
+  { id: "ten", name: "T.E.N", logo: clientLogo("ten.webp") },
+  { id: "client-light", name: "TGS Saudi client", logo: clientLogo("client-light.png"), theme: "dark" },
+  { id: "astra", name: "Astra Mining", logo: clientLogo("astra-mining.jpg") },
+  { id: "client-ar", name: "TGS Saudi client", logo: clientLogo("client-ar.png") },
+  { id: "rsts", name: "RSTS Engineering Solutions", logo: clientLogo("rsts-engineering.png") },
+  { id: "alissa", name: "Alissa Group", logo: clientLogo("alissa-group.png") },
+];
+
 export type Insight = {
   id: string;
   date: { en: string; ar: string };

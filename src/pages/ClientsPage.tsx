@@ -1,21 +1,11 @@
-import { useMemo, useState } from "react";
 import { ClientMarquee } from "../components/ClientMarquee";
 import { Reveal } from "../components/Reveal";
-import { clients } from "../data";
+import { approvedClientLogos } from "../data";
 import { useCopy, useI18n } from "../i18n";
 
 export function ClientsPage() {
-  const { lang, t } = useI18n();
+  const { t } = useI18n();
   const copy = useCopy();
-  const [sector, setSector] = useState("All");
-
-  const sectors = useMemo(() => {
-    const unique = Array.from(new Set(clients.map((c) => c.sector.en)));
-    return ["All", ...unique];
-  }, []);
-
-  const filtered =
-    sector === "All" ? clients : clients.filter((c) => c.sector.en === sector);
 
   return (
     <>
@@ -32,47 +22,15 @@ export function ClientsPage() {
 
       <section className="section" style={{ paddingTop: "2rem" }}>
         <div className="container">
-          <div className="client-filters">
-            {sectors.map((item) => {
-              const label =
-                item === "All"
-                  ? t(copy.clientsPage.filterAll)
-                  : clients.find((c) => c.sector.en === item)?.sector[lang] || item;
-              return (
-                <button
-                  key={item}
-                  type="button"
-                  className={`filter-btn ${sector === item ? "active" : ""}`}
-                  onClick={() => setSector(item)}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="client-grid">
-            {filtered.map((client, index) => (
+          <div className="client-logo-grid">
+            {approvedClientLogos.map((client, index) => (
               <Reveal key={client.id} delay={(index % 6) * 40}>
-                <article className="client-card">
-                  <div
-                    className="logo-mark"
-                    style={{ background: client.logoColor, width: 52, height: 52 }}
-                  >
-                    {client.initials}
-                  </div>
-                  <h3>{client.name[lang]}</h3>
-                  <div className="client-meta">
-                    <span className="tag">{client.sector[lang]}</span>
-                    <span className="tag">{client.location[lang]}</span>
-                  </div>
-                  <p>{client.focus[lang]}</p>
+                <article className={`client-logo-card client-logo-card-${client.theme || "light"}`}>
+                  <img src={client.logo} alt={client.name} loading="lazy" />
                 </article>
               </Reveal>
             ))}
           </div>
-
-          <p className="client-note">{t(copy.clientsPage.note)}</p>
         </div>
       </section>
     </>
