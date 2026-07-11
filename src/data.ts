@@ -42,6 +42,11 @@ export const approvedClientLogos: ClientLogo[] = [
   { id: "client-ar", name: "TGS Saudi client", logo: clientLogo("client-ar.png") },
   { id: "rsts", name: "RSTS Engineering Solutions", logo: clientLogo("rsts-engineering.png") },
   { id: "alissa", name: "Alissa Group", logo: clientLogo("alissa-group.png") },
+  {
+    id: "rcjy",
+    name: "Royal Commission for Jubail & Yanbu",
+    logo: clientLogo("royal-commission-jubail-yanbu.png"),
+  },
 ];
 
 export type Insight = {
