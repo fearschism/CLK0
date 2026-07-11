@@ -38,7 +38,7 @@ export const approvedClientLogos: ClientLogo[] = [
   { id: "aknann", name: "Aknann", logo: clientLogo("aknann.png") },
   { id: "ten", name: "T.E.N", logo: clientLogo("ten.webp") },
   { id: "client-light", name: "TGS Saudi client", logo: clientLogo("client-light.png"), theme: "dark" },
-  { id: "astra", name: "Astra Mining", logo: clientLogo("astra-mining.jpg") },
+  { id: "astra", name: "Astra Mining", logo: clientLogo("astra-mining.png") },
   { id: "client-ar", name: "TGS Saudi client", logo: clientLogo("client-ar.png") },
   { id: "rsts", name: "RSTS Engineering Solutions", logo: clientLogo("rsts-engineering.png") },
   { id: "alissa", name: "Alissa Group", logo: clientLogo("alissa-group.png") },
