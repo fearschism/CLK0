@@ -6,7 +6,7 @@ import { useCopy, useI18n } from "../i18n";
 export function ServicesPage() {
   const { lang, t } = useI18n();
   const copy = useCopy();
-  const expertiseVisual = `${import.meta.env.BASE_URL}expertise-visuals.png`;
+  const expertiseVisual = `${import.meta.env.BASE_URL}expertise-visuals.jpg`;
   const visualPositions = ["0% center", "33.333% center", "66.666% center", "100% center"];
 
   return (
