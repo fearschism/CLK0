@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TGS Saudi — Website Design Specification</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Noto+Sans:wght@400;600;700&display=swap");
+
+      :root {
+        --orange: #f58025;
+        --orange-deep: #e06a12;
+        --orange-soft: #fff4eb;
+        --ink: #2b2b2b;
+        --ink-soft: #6b6b6b;
+        --line: #ececec;
+        --line-strong: #d8d8d8;
+        --paper: #ffffff;
+        --muted: #f7f7f7;
+        --dark: #1f1f1f;
+      }
+
+      @page {
+        size: A4;
+        margin: 18mm 16mm 20mm 16mm;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Poppins", "Noto Sans", system-ui, sans-serif;
+        color: var(--ink);
+        font-size: 10.5pt;
+        line-height: 1.55;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0;
+      }
+
+      p {
+        margin: 0 0 0.6rem;
+        color: #3a3a3a;
+      }
+
+      .muted {
+        color: var(--ink-soft);
+      }
+
+      /* ---------- Cover ---------- */
+      .cover {
+        position: relative;
+        height: 259mm;
+        margin: -18mm -16mm 0 -16mm;
+        padding: 34mm 22mm;
+        color: #fff;
+        background: linear-gradient(150deg, #2b2b2b 0%, #7a3a0f 55%, var(--orange) 100%);
+        overflow: hidden;
+        page-break-after: always;
+      }
+      .cover::before {
+        content: "";
+        position: absolute;
+        width: 420px;
+        height: 420px;
+        border-radius: 50%;
+        top: -140px;
+        right: -120px;
+        background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 70%);
+      }
+      .cover::after {
+        content: "";
+        position: absolute;
+        width: 360px;
+        height: 360px;
+        border-radius: 50%;
+        bottom: -150px;
+        left: -110px;
+        background: radial-gradient(circle at 50% 50%, rgba(245, 128, 37, 0.5), rgba(245, 128, 37, 0) 70%);
+      }
+      .cover-inner {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .brand-lockup {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand-lockup .mark {
+        width: 46px;
+        height: 46px;
+      }
+      .brand-lockup .word {
+        font-size: 26pt;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: -0.01em;
+      }
+      .cover-spacer {
+        flex: 1;
+      }
+      .cover .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.32em;
+        font-size: 9pt;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.85);
+        margin-bottom: 14px;
+      }
+      .cover h1 {
+        font-size: 40pt;
+        line-height: 1.05;
+        font-weight: 800;
+        max-width: 16ch;
+        margin-bottom: 16px;
+      }
+      .cover .sub {
+        font-size: 13pt;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 46ch;
+      }
+      .cover-meta {
+        margin-top: 30px;
+        display: flex;
+        gap: 42px;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        padding-top: 18px;
+      }
+      .cover-meta div span {
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 7.5pt;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 3px;
+      }
+      .cover-meta div strong {
+        font-size: 11pt;
+        font-weight: 600;
+      }
+
+      /* ---------- Sections ---------- */
+      section.doc {
+        page-break-before: always;
+        padding-top: 2mm;
+      }
+      .sec-head {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        border-bottom: 2px solid var(--orange);
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+      }
+      .sec-head .num {
+        font-size: 12pt;
+        font-weight: 800;
+        color: var(--orange);
+      }
+      .sec-head h2 {
+        font-size: 17pt;
+      }
+      h3.block {
+        font-size: 12pt;
+        margin: 16px 0 7px;
+        color: var(--ink);
+      }
+      h3.block::before {
+        content: "";
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 2px;
+        background: var(--orange);
+        margin-right: 8px;
+        transform: translateY(0);
+      }
+
+      .lead {
+        font-size: 11.5pt;
+        color: var(--ink-soft);
+        max-width: 62ch;
+        margin-bottom: 8px;
+      }
+
+      /* Table of contents */
+      .toc {
+        columns: 2;
+        column-gap: 28px;
+        margin-top: 8px;
+      }
+      .toc div {
+        break-inside: avoid;
+        padding: 7px 0;
+        border-bottom: 1px dashed var(--line-strong);
+        display: flex;
+        justify-content: space-between;
+        font-size: 10pt;
+      }
+      .toc div span:first-child {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .toc div span:last-child {
+        color: var(--orange);
+        font-weight: 700;
+      }
+
+      /* Color swatches */
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 6px;
+      }
+      .swatch {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .swatch .chip {
+        height: 62px;
+      }
+      .swatch .meta {
+        padding: 8px 10px;
+      }
+      .swatch .meta strong {
+        display: block;
+        font-size: 10pt;
+      }
+      .swatch .meta code {
+        font-size: 9pt;
+        color: var(--ink-soft);
+        font-family: "Noto Sans", monospace;
+      }
+      .swatch .meta small {
+        display: block;
+        color: var(--ink-soft);
+        font-size: 8pt;
+        margin-top: 2px;
+      }
+
+      /* Generic cards grid */
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: #fff;
+        break-inside: avoid;
+      }
+      .card h4 {
+        font-size: 10.5pt;
+        margin-bottom: 4px;
+      }
+      .card .tag {
+        display: inline-block;
+        font-size: 7.5pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--orange);
+        background: var(--orange-soft);
+        border-radius: 20px;
+        padding: 2px 8px;
+        margin-bottom: 6px;
+      }
+      .card p {
+        font-size: 9.3pt;
+        margin: 0;
+        color: var(--ink-soft);
+      }
+
+      /* Tables */
+      table.spec {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 6px;
+        font-size: 9.6pt;
+      }
+      table.spec th,
+      table.spec td {
+        text-align: left;
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      table.spec th {
+        background: var(--muted);
+        color: var(--ink);
+        font-size: 8.5pt;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      table.spec td code {
+        font-family: "Noto Sans", monospace;
+        color: var(--orange-deep);
+        font-size: 9pt;
+      }
+
+      /* Type specimen */
+      .specimen {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-top: 6px;
+      }
+      .specimen .row {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        padding: 6px 0;
+        border-bottom: 1px dashed var(--line);
+      }
+      .specimen .row:last-child {
+        border-bottom: 0;
+      }
+      .specimen .row .label {
+        width: 130px;
+        flex: 0 0 130px;
+        font-size: 8pt;
+        color: var(--ink-soft);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      ul.clean {
+        margin: 4px 0 8px;
+        padding-left: 18px;
+      }
+      ul.clean li {
+        margin-bottom: 4px;
+        font-size: 9.8pt;
+        color: #3a3a3a;
+      }
+
+      .callout {
+        border-left: 3px solid var(--orange);
+        background: var(--orange-soft);
+        border-radius: 0 10px 10px 0;
+        padding: 10px 14px;
+        margin: 12px 0;
+        font-size: 9.6pt;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 6px 0 4px;
+      }
+      .pill {
+        border: 1px solid var(--line-strong);
+        border-radius: 20px;
+        padding: 3px 11px;
+        font-size: 8.6pt;
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      /* Fixed running footer on every page */
+      .page-foot {
+        position: fixed;
+        bottom: -14mm;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        font-size: 7.5pt;
+        color: var(--ink-soft);
+        letter-spacing: 0.04em;
+      }
+      .page-foot .foot-mark {
+        color: var(--orange);
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-foot">
+      <span class="foot-mark">tgs Saudi</span>
+      <span>Website Design Specification · v1.0</span>
+      <span>Confidential</span>
+    </div>
+
+    <!-- COVER -->
+    <div class="cover">
+      <div class="cover-inner">
+        <div class="brand-lockup">
+          <svg class="mark" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="64" height="64" rx="10" fill="#F0802B" />
+            <path
+              fill="#fff"
+              d="M12.5 18.5v4.8h6.2v1.8h-6.2V39c0 2.8.85 4.55 3.2 4.55 1.2 0 1.95-.17 2.55-.35l.25 1.7c-.75.25-1.75.5-3.05.5-1.6 0-2.95-.5-3.7-1.5-.95-1.2-1.35-3.05-1.35-5.25V25.1H7.1v-1.8h3.7v-4.05l1.7-.75zm26.2 13.2c0-.85-.08-1.5-.25-2.1-.95-2.6-3.2-5-6.85-5-4.65 0-7.85 3.8-7.85 9.65 0 5 2.6 9.2 7.75 9.2 2.95 0 5.65-1.85 6.85-4.9.25-.75.35-1.5.35-2.35v-4.5zm2.2 10.3c0 5.65-1.2 8.45-3.05 10.15-2 1.95-5 2.6-7.45 2.6-2.55 0-5.3-.7-7-1.95l.75-1.8c1.5 1 3.7 1.85 6.5 1.85 4.65 0 7.95-2.35 7.95-8.85v-3.1h-.1c-1.2 2.3-3.7 4.2-7.6 4.2-5.55 0-9.45-4.8-9.45-10.8 0-7.6 5.05-11.65 9.9-11.65 4.3 0 6.5 2.35 7.45 4.2h.1l.15-3.7h2v5.65v13.2zm6.5.35c1.2.75 2.95 1.5 5 1.5 3.45 0 5.15-1.85 5.15-4.15 0-2.45-1.45-3.7-4.65-5-3.65-1.35-5.55-3.35-5.55-6 0-3.2 2.55-5.9 6.75-5.9 2 0 3.7.6 4.8 1.35l-.85 1.8c-.75-.5-2.2-1.35-4.4-1.35-2.8 0-4.2 1.75-4.2 3.8 0 2.3 1.5 3.2 4.55 4.45 3.55 1.45 5.65 3.2 5.65 6.5 0 3.7-2.95 6.25-7.45 6.25-2.1 0-4.15-.6-5.55-1.5l.8-1.85z"
+            />
+          </svg>
+          <span class="word">Saudi</span>
+        </div>
+
+        <div class="cover-spacer"></div>
+
+        <div class="eyebrow">Website Design Specification</div>
+        <h1>TGS Saudi Arabia Corporate Website</h1>
+        <p class="sub">
+          A reference for the visual language, components, motion, and technical
+          foundations of the TGS Saudi marketing website — think global sustainability.
+        </p>
+
+        <div class="cover-meta">
+          <div>
+            <span>Document</span>
+            <strong>Design Specification</strong>
+          </div>
+          <div>
+            <span>Version</span>
+            <strong>1.0</strong>
+          </div>
+          <div>
+            <span>Product</span>
+            <strong>tgs-saudi web</strong>
+          </div>
+          <div>
+            <span>Status</span>
+            <strong>Living document</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOC -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">00</span><h2>Contents</h2></div>
+      <div class="toc">
+        <div><span>01 · Overview</span><span>Purpose &amp; scope</span></div>
+        <div><span>02 · Brand Identity</span><span>Logo, colour, type</span></div>
+        <div><span>03 · Foundations</span><span>Grid, spacing, tokens</span></div>
+        <div><span>04 · Components</span><span>UI building blocks</span></div>
+        <div><span>05 · Pages</span><span>Templates &amp; content</span></div>
+        <div><span>06 · Motion</span><span>Interaction design</span></div>
+        <div><span>07 · Internationalisation</span><span>EN / AR · RTL</span></div>
+        <div><span>08 · Responsive</span><span>Breakpoints</span></div>
+        <div><span>09 · Technology</span><span>Stack &amp; delivery</span></div>
+        <div><span>10 · Accessibility</span><span>&amp; content notes</span></div>
+      </div>
+
+      <div class="callout">
+        <strong>About this document.</strong> This specification captures the
+        design system as implemented in the TGS Saudi website (React + Vite).
+        Values shown (colours, type, spacing, breakpoints) mirror the production
+        stylesheet so design and engineering stay aligned.
+      </div>
+    </section>
+
+    <!-- 01 OVERVIEW -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">01</span><h2>Overview</h2></div>
+      <p class="lead">
+        The TGS Saudi website is a bilingual (English / Arabic) single-page
+        marketing site for the Saudi member firm of the TGS global network. It
+        presents the firm’s expertise, clients, story, and contact channels with
+        a modern, confident, and distinctly branded experience.
+      </p>
+      <h3 class="block">Design principles</h3>
+      <div class="grid2">
+        <div class="card">
+          <h4>Confident &amp; professional</h4>
+          <p>A clean, editorial layout with generous whitespace communicates trust and expertise for a middle-market advisory audience.</p>
+        </div>
+        <div class="card">
+          <h4>Distinctly branded</h4>
+          <p>The TGS orange is used deliberately as an accent and energy colour against a light, neutral canvas.</p>
+        </div>
+        <div class="card">
+          <h4>Quietly modern</h4>
+          <p>Subtle motion — an interactive hero field, sliding carousels, reveal-on-scroll — signals a forward-looking firm without distraction.</p>
+        </div>
+        <div class="card">
+          <h4>Bilingual by design</h4>
+          <p>Every screen is built to mirror cleanly between left-to-right English and right-to-left Arabic.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 BRAND -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">02</span><h2>Brand Identity</h2></div>
+
+      <h3 class="block">Logo</h3>
+      <p>
+        The mark pairs the global TGS glyph — set in white inside a rounded orange
+        tile — with the word <strong>Saudi</strong> in brand orange. The mark and
+        wordmark are locked together and always read left-to-right, even in Arabic
+        layouts (only the whole lockup mirrors position). The tile also serves as
+        the favicon.
+      </p>
+      <div class="card" style="display:flex;align-items:center;gap:16px;max-width:340px;margin-top:6px;">
+        <svg style="width:44px;height:44px;" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="10" fill="#F0802B" />
+          <path fill="#fff" d="M12.5 18.5v4.8h6.2v1.8h-6.2V39c0 2.8.85 4.55 3.2 4.55 1.2 0 1.95-.17 2.55-.35l.25 1.7c-.75.25-1.75.5-3.05.5-1.6 0-2.95-.5-3.7-1.5-.95-1.2-1.35-3.05-1.35-5.25V25.1H7.1v-1.8h3.7v-4.05l1.7-.75zm26.2 13.2c0-.85-.08-1.5-.25-2.1-.95-2.6-3.2-5-6.85-5-4.65 0-7.85 3.8-7.85 9.65 0 5 2.6 9.2 7.75 9.2 2.95 0 5.65-1.85 6.85-4.9.25-.75.35-1.5.35-2.35v-4.5zm2.2 10.3c0 5.65-1.2 8.45-3.05 10.15-2 1.95-5 2.6-7.45 2.6-2.55 0-5.3-.7-7-1.95l.75-1.8c1.5 1 3.7 1.85 6.5 1.85 4.65 0 7.95-2.35 7.95-8.85v-3.1h-.1c-1.2 2.3-3.7 4.2-7.6 4.2-5.55 0-9.45-4.8-9.45-10.8 0-7.6 5.05-11.65 9.9-11.65 4.3 0 6.5 2.35 7.45 4.2h.1l.15-3.7h2v5.65v13.2zm6.5.35c1.2.75 2.95 1.5 5 1.5 3.45 0 5.15-1.85 5.15-4.15 0-2.45-1.45-3.7-4.65-5-3.65-1.35-5.55-3.35-5.55-6 0-3.2 2.55-5.9 6.75-5.9 2 0 3.7.6 4.8 1.35l-.85 1.8c-.75-.5-2.2-1.35-4.4-1.35-2.8 0-4.2 1.75-4.2 3.8 0 2.3 1.5 3.2 4.55 4.45 3.55 1.45 5.65 3.2 5.65 6.5 0 3.7-2.95 6.25-7.45 6.25-2.1 0-4.15-.6-5.55-1.5l.8-1.85z" />
+        </svg>
+        <span style="font-size:22pt;font-weight:600;color:var(--orange);">Saudi</span>
+      </div>
+
+      <h3 class="block">Colour palette</h3>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:#f58025"></div><div class="meta"><strong>Brand Orange</strong><code>#F58025</code><small>Primary accent, CTAs</small></div></div>
+        <div class="swatch"><div class="chip" style="background:#e06a12"></div><div class="meta"><strong>Orange Deep</strong><code>#E06A12</code><small>Hover / pressed</small></div></div>
+        <div class="swatch"><div class="chip" style="background:#fff4eb;border-bottom:1px solid #eee"></div><div class="meta"><strong>Orange Soft</strong><code>#FFF4EB</code><small>Tints, chips, bands</small></div></div>
+        <div class="swatch"><div class="chip" style="background:#2b2b2b"></div><div class="meta"><strong>Ink</strong><code>#2B2B2B</code><small>Headings, body</small></div></div>
+        <div class="swatch"><div class="chip" style="background:#6b6b6b"></div><div class="meta"><strong>Ink Soft</strong><code>#6B6B6B</code><small>Secondary text</small></div></div>
+        <div class="swatch"><div class="chip" style="background:#1f1f1f"></div><div class="meta"><strong>Dark</strong><code>#1F1F1F</code><small>Deep contrast</small></div></div>
+        <div class="swatch"><div class="chip" style="background:#f7f7f7;border-bottom:1px solid #eee"></div><div class="meta"><strong>Muted</strong><code>#F7F7F7</code><small>Alternating bands</small></div></div>
+        <div class="swatch"><div class="chip" style="background:#ececec;border-bottom:1px solid #e2e2e2"></div><div class="meta"><strong>Line</strong><code>#ECECEC</code><small>Borders, dividers</small></div></div>
+        <div class="swatch"><div class="chip" style="background:#ffffff;border-bottom:1px solid #eee"></div><div class="meta"><strong>Paper</strong><code>#FFFFFF</code><small>Base canvas</small></div></div>
+      </div>
+
+      <h3 class="block">Typography</h3>
+      <p>
+        <strong>Poppins</strong> is the primary typeface (headings and UI), with
+        <strong>Noto Sans</strong> supporting Latin and Arabic body text. Headings
+        use a tight tracking of <code>-0.01em</code> to <code>-0.03em</code>.
+      </p>
+      <div class="specimen">
+        <div class="row"><div class="label">Display / H1</div><div style="font-size:26pt;font-weight:800;letter-spacing:-0.02em;">TGS Saudi Arabia</div></div>
+        <div class="row"><div class="label">Section / H2</div><div style="font-size:17pt;font-weight:700;">Our expertise</div></div>
+        <div class="row"><div class="label">Card / H3</div><div style="font-size:12.5pt;font-weight:700;">Zakat &amp; Tax</div></div>
+        <div class="row"><div class="label">Body</div><div style="font-size:10.5pt;color:#3a3a3a;">Integrated audit, zakat, tax, and advisory services for organisations building and growing across the Kingdom.</div></div>
+        <div class="row"><div class="label">Eyebrow</div><div style="font-size:8.5pt;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--orange);">Think Global Sustainability</div></div>
+      </div>
+    </section>
+
+    <!-- 03 FOUNDATIONS -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">03</span><h2>Foundations</h2></div>
+      <p class="lead">Shared tokens keep spacing, shape, and elevation consistent across every screen.</p>
+      <table class="spec">
+        <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>Container width</td><td><code>min(1160px, 100% − 2.4rem)</code></td><td>Centered content column</td></tr>
+          <tr><td>Header height</td><td><code>76px</code></td><td>Sticky navigation bar</td></tr>
+          <tr><td>Radius</td><td><code>18px</code> / <code>12px</code></td><td>Cards / smaller elements</td></tr>
+          <tr><td>Shadow</td><td><code>0 16px 40px rgba(0,0,0,.08)</code></td><td>Card hover elevation</td></tr>
+          <tr><td>Section rhythm</td><td><code>~4–5rem</code> vertical</td><td>Between major sections</td></tr>
+          <tr><td>Grids</td><td>3-up cards · 2-up about</td><td>Expertise, pillars, footer</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        Alternating sections use a muted band (<code>#F7F7F7</code>) against white to
+        create rhythm without hard dividers.
+      </div>
+    </section>
+
+    <!-- 04 COMPONENTS -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">04</span><h2>Components</h2></div>
+      <div class="grid2">
+        <div class="card"><span class="tag">Navigation</span><h4>Sticky header</h4><p>Logo, primary links, EN/AR toggle, and a primary “Contact us” button. Compacts on scroll; collapses to a menu panel on mobile.</p></div>
+        <div class="card"><span class="tag">Actions</span><h4>Buttons</h4><p>Primary (solid orange) and outline (orange border) styles, with a soft hover lift and colour deepening.</p></div>
+        <div class="card"><span class="tag">Content</span><h4>Cards</h4><p>Pillar, expertise, client, insight, and team cards share a white surface, hairline border, rounded corners, and a lift-on-hover.</p></div>
+        <div class="card"><span class="tag">Motion</span><h4>Carousel / marquee</h4><p>Expertise cards and client logos scroll horizontally in a seamless loop, pausing on hover and reversing direction in RTL.</p></div>
+        <div class="card"><span class="tag">Forms</span><h4>Contact form</h4><p>Name, company, service selector, and message. Submits via a pre-filled mailto draft to <code>info@tgs-saudi.com</code>.</p></div>
+        <div class="card"><span class="tag">Location</span><h4>Map</h4><p>Embedded interactive map pinned to the Riyadh office (Al Sahafah District) with an overlaid “Our office” card and maps link.</p></div>
+        <div class="card"><span class="tag">Identity</span><h4>Footer</h4><p>An immersive white-to-orange gradient with soft orange glows, holding navigation, contact details, and legal links.</p></div>
+        <div class="card"><span class="tag">Social proof</span><h4>Client marquee</h4><p>A continuously scrolling band of client chips under the hero to establish trust “across the Kingdom”.</p></div>
+      </div>
+    </section>
+
+    <!-- 05 PAGES -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">05</span><h2>Pages</h2></div>
+      <table class="spec">
+        <thead><tr><th>Page</th><th>Key sections</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Home</strong></td><td>Interactive hero · client marquee · “How we support you” pillars · “Our expertise” carousel · TGS network stats · insights · footer</td></tr>
+          <tr><td><strong>Expertise</strong></td><td>Numbered service list (Audit, Accounting, Advisory, Zakat &amp; Tax) · Saudi specialisations (Local Content Audit, Off-plan Sale &amp; Rental, Internal Audit &amp; Risk, Corporate Finance)</td></tr>
+          <tr><td><strong>Clients</strong></td><td>Portfolio cards with sector filtering (Manufacturing, Trading, Technology, Healthcare, …)</td></tr>
+          <tr><td><strong>About Us</strong></td><td>Who we are · Vision · TGS global network · Values · Our team</td></tr>
+          <tr><td><strong>Contact</strong></td><td>Riyadh office map with pin · contact form</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        The firm offers audit, accounting, advisory, and zakat &amp; tax services;
+        commercial legal is a capability of the wider TGS network rather than the
+        Saudi firm, and is described only at network level.
+      </div>
+    </section>
+
+    <!-- 06 MOTION -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">06</span><h2>Motion &amp; Interaction</h2></div>
+      <p class="lead">Motion is purposeful and brand-coloured — it adds life and a sense of modernity while keeping content legible.</p>
+      <table class="spec">
+        <thead><tr><th>Interaction</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td>Hero dot field</td><td>A canvas grid of orange dots repels away from the cursor and springs back, creating a live ripple across the hero whitespace.</td></tr>
+          <tr><td>Heading reveal</td><td>Hovering “TGS Saudi Arabia” transitions it to orange with a glowing drop-shadow and a light beam sweeping across the letters.</td></tr>
+          <tr><td>Expertise carousel</td><td>Continuous horizontal auto-scroll (~28s loop), paused on hover, direction-aware for RTL.</td></tr>
+          <tr><td>Client marquee</td><td>Slower continuous scroll (~38s) with edge fade masks.</td></tr>
+          <tr><td>Reveal on scroll</td><td>Sections and cards fade and rise into view as they enter the viewport.</td></tr>
+          <tr><td>Ambient blobs</td><td>Soft organic shapes drift gently behind the hero and footer.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 07 i18n -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">07</span><h2>Internationalisation</h2></div>
+      <p class="lead">The site ships in English and Arabic with a single toggle, and is fully mirrored for right-to-left reading.</p>
+      <ul class="clean">
+        <li>All copy is stored as paired EN / AR strings; toggling swaps language instantly with no reload.</li>
+        <li>Switching to Arabic sets <code>dir=rtl</code>, mirroring layout, alignment, and marquee direction.</li>
+        <li>The logo lockup stays left-to-right in both languages; only its position mirrors.</li>
+        <li>Numerals and the office map remain consistent across languages.</li>
+      </ul>
+    </section>
+
+    <!-- 08 RESPONSIVE -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">08</span><h2>Responsive Behaviour</h2></div>
+      <table class="spec">
+        <thead><tr><th>Breakpoint</th><th>Adaptation</th></tr></thead>
+        <tbody>
+          <tr><td><code>≤ 980px</code></td><td>Hero and two-column layouts stack; visual moves above text; multi-column grids drop to 2-up.</td></tr>
+          <tr><td><code>≤ 780px</code></td><td>Primary nav collapses to a menu panel; footer stacks; comfortable tap targets.</td></tr>
+          <tr><td><code>≤ 560px</code></td><td>Grids become single-column; type and spacing tighten for small screens.</td></tr>
+        </tbody>
+      </table>
+      <div class="pill-row">
+        <span class="pill">Desktop</span>
+        <span class="pill">Tablet</span>
+        <span class="pill">Mobile</span>
+        <span class="pill">RTL &amp; LTR</span>
+      </div>
+    </section>
+
+    <!-- 09 TECH -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">09</span><h2>Technology &amp; Delivery</h2></div>
+      <table class="spec">
+        <thead><tr><th>Area</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr><td>Framework</td><td>React 19 with React Router (client-side single-page app)</td></tr>
+          <tr><td>Language</td><td>TypeScript</td></tr>
+          <tr><td>Build tool</td><td>Vite 7 (dev server &amp; optimised production build)</td></tr>
+          <tr><td>Styling</td><td>Hand-authored CSS design system with custom properties (tokens)</td></tr>
+          <tr><td>Hosting</td><td>GitHub Pages, served under the <code>/CLK0/</code> base path</td></tr>
+          <tr><td>Assets</td><td>SVG logo/favicon, PNG brand mark, remote imagery via CDN</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 10 ACCESSIBILITY -->
+    <section class="doc">
+      <div class="sec-head"><span class="num">10</span><h2>Accessibility &amp; Content Notes</h2></div>
+      <ul class="clean">
+        <li>Colour pairings target legible contrast; orange is reserved for accents and large text, not long body copy.</li>
+        <li>Decorative canvas and blobs are non-interactive (<code>aria-hidden</code>) and never block clicks or content.</li>
+        <li>Navigation, forms, and buttons are keyboard operable with visible focus.</li>
+        <li>Client names and team profiles are placeholders for demonstration and should be replaced with approved content before launch.</li>
+        <li>Imagery should carry meaningful alternative text once final assets are supplied.</li>
+      </ul>
+      <div class="callout">
+        <strong>Next steps.</strong> Supply approved team photos and bios, confirmed
+        client list, and any final legal copy. This document evolves alongside the
+        product as new sections and components are introduced.
+      </div>
+    </section>
+  </body>
+</html>
