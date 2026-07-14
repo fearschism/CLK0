@@ -65,14 +65,24 @@ export function HeroDots() {
     let nextPulse = 0;
     let hovered = -1;
 
+    const mapFrame = () => {
+      const mobile = width < 700;
+      const mapWidth = mobile ? 900 : Math.min(1560, Math.max(760, width - 48));
+      const mapHeight = mapWidth / 2;
+      const riyadhPosition = (46.6753 + 180) / 360;
+      const left = mobile ? width * 0.6 - mapWidth * riyadhPosition : (width - mapWidth) / 2;
+      return {
+        left,
+        top: (height - mapHeight) / 2,
+        width: mapWidth,
+        height: mapHeight,
+      };
+    };
+
     const project = (hub: Hub, time = 0): ScreenHub => {
-      const worldX = (hub.lon + 180) / 360;
-      const worldY = (90 - hub.lat) / 180;
-      const mobile = width < 600;
-      const left = mobile ? 0.02 : 0.12;
-      const usableWidth = mobile ? 0.96 : 0.86;
-      const x = width * (left + worldX * usableWidth);
-      const y = height * (0.05 + worldY * 0.9);
+      const frame = mapFrame();
+      const x = frame.left + ((hub.lon + 180) / 360) * frame.width;
+      const y = frame.top + ((90 - hub.lat) / 180) * frame.height;
       const drift = reducedMotion ? 0 : hub.tier === 1 ? 0 : 1.8;
       return {
         ...hub,
@@ -184,12 +194,10 @@ export function HeroDots() {
     };
 
     const projectLonLat = (lon: number, lat: number) => {
-      const mobile = width < 600;
-      const left = mobile ? 0.02 : 0.12;
-      const usableWidth = mobile ? 0.96 : 0.86;
+      const frame = mapFrame();
       return {
-        x: width * (left + ((lon + 180) / 360) * usableWidth),
-        y: height * (0.05 + ((90 - lat) / 180) * 0.9),
+        x: frame.left + ((lon + 180) / 360) * frame.width,
+        y: frame.top + ((90 - lat) / 180) * frame.height,
       };
     };
 
