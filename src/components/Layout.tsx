@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { contact, expertise } from "../data";
 import { useCopy, useI18n } from "../i18n";
 import { Logo } from "./Logo";
@@ -7,12 +7,45 @@ import { Logo } from "./Logo";
 export function Layout() {
   const { lang, toggleLang, t } = useI18n();
   const copy = useCopy();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setOpen(false);
-  }, [lang]);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [lang, location.pathname]);
+
+  useEffect(() => {
+    const meta = {
+      "/": {
+        en: ["TGS Saudi Arabia | Audit, Zakat, Tax & Advisory", "Integrated professional services for organisations operating and growing in Saudi Arabia."],
+        ar: ["تي جي إس السعودية | التدقيق والزكاة والضرائب والاستشارات", "خدمات مهنية متكاملة للمنظمات العاملة والنامية في المملكة العربية السعودية."],
+      },
+      "/services": {
+        en: ["Our Expertise | TGS Saudi Arabia", "Audit, accounting, advisory, zakat, tax and specialist Saudi regulatory services."],
+        ar: ["خبراتنا | تي جي إس السعودية", "خدمات التدقيق والمحاسبة والاستشارات والزكاة والضرائب والخدمات التنظيمية السعودية المتخصصة."],
+      },
+      "/clients": {
+        en: ["Our Clients | TGS Saudi Arabia", "Organisations that place their confidence in TGS Saudi Arabia."],
+        ar: ["عملاؤنا | تي جي إس السعودية", "منظمات وضعت ثقتها في تي جي إس السعودية."],
+      },
+      "/about": {
+        en: ["About Us | TGS Saudi Arabia", "A Riyadh-based professional services firm and independent member of TGS Global."],
+        ar: ["من نحن | تي جي إس السعودية", "مكتب خدمات مهنية في الرياض وعضو مستقل في شبكة تي جي إس العالمية."],
+      },
+      "/contact": {
+        en: ["Contact | TGS Saudi Arabia", "Speak with our Riyadh team about audit, zakat, tax, advisory or specialist engagements."],
+        ar: ["تواصل معنا | تي جي إس السعودية", "تواصل مع فريقنا في الرياض بشأن التدقيق أو الزكاة أو الضرائب أو الاستشارات."],
+      },
+    } as const;
+    const entry = meta[location.pathname as keyof typeof meta] || meta["/"];
+    const [title, description] = entry[lang];
+    document.title = title;
+    document.querySelector('meta[name="description"]')?.setAttribute("content", description);
+    document.querySelector('meta[property="og:title"]')?.setAttribute("content", title);
+    document.querySelector('meta[property="og:description"]')?.setAttribute("content", description);
+  }, [lang, location.pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -33,6 +66,9 @@ export function Layout() {
 
   return (
     <div className="site">
+      <a className="skip-link" href="#main-content">
+        {lang === "en" ? "Skip to content" : "انتقل إلى المحتوى"}
+      </a>
       <header className={`nav ${scrolled ? "scrolled" : ""}`}>
         <div className="nav-inner">
           <Link to="/" className="brand-logo" onClick={() => setOpen(false)}>
@@ -100,9 +136,35 @@ export function Layout() {
         </div>
       )}
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <Outlet />
       </main>
+
+      <section className="conversation-band" aria-labelledby="conversation-title">
+        <div className="container conversation-band-inner">
+          <div>
+            <span className="conversation-kicker">
+              {lang === "en" ? "A clearer next step" : "خطوتك التالية بوضوح"}
+            </span>
+            <h2 id="conversation-title">
+              {lang === "en" ? "Let’s turn complexity into confidence." : "نحوّل التعقيد إلى ثقة."}
+            </h2>
+            <p>
+              {lang === "en"
+                ? "Tell our Riyadh team what you are navigating. We’ll connect you with the right expertise."
+                : "أخبر فريقنا في الرياض بالتحدي الذي تواجهه، وسنصلك بالخبرة المناسبة."}
+            </p>
+          </div>
+          <div className="conversation-actions">
+            <Link className="btn btn-dark" to="/contact">
+              {t(copy.nav.talk)}
+            </Link>
+            <a className="conversation-phone" href={contact.phoneHref}>
+              {contact.phone}
+            </a>
+          </div>
+        </div>
+      </section>
 
       <footer className="footer">
         <div className="container footer-grid">
