@@ -1,4 +1,7 @@
 import { useEffect, useRef } from "react";
+import type { FeatureCollection, Geometry, Position } from "geojson";
+import { feature } from "topojson-client";
+import countriesAtlas from "world-atlas/countries-110m.json";
 
 type Hub = {
   lat: number;
@@ -35,18 +38,10 @@ const globalHubs: Omit<Hub, "phase">[] = [
   { lat: -23.5505, lon: -46.6333, tier: 3 }, // Sao Paulo
 ];
 
-// Simplified line-art geography keeps the hero light, legible, and responsive.
-const continentPaths: Array<Array<[number, number]>> = [
-  [[-168, 72], [-140, 70], [-125, 58], [-105, 52], [-95, 42], [-82, 25], [-98, 18], [-115, 28], [-130, 43], [-155, 52], [-168, 72]],
-  [[-82, 12], [-62, 8], [-52, -8], [-58, -28], [-70, -55], [-79, -38], [-88, -10], [-82, 12]],
-  [[-12, 36], [8, 58], [34, 70], [76, 67], [112, 56], [146, 48], [170, 35], [146, 18], [120, 8], [92, 22], [62, 8], [42, 28], [18, 12], [-2, 20], [-12, 36]],
-  [[-18, 35], [4, 36], [28, 28], [42, 8], [32, -18], [16, -35], [-4, -30], [-17, -6], [-18, 35]],
-  [[112, -10], [150, -12], [155, -28], [135, -40], [114, -30], [112, -10]],
-];
-
-const saudiOutline: Array<[number, number]> = [
-  [34.6, 29.2], [39.0, 32.2], [46.8, 32.0], [50.2, 26.0], [55.7, 25.8], [55.2, 20.0], [51.0, 16.4], [47.0, 16.0], [42.8, 17.4], [39.2, 20.5], [36.5, 22.5], [34.6, 29.2],
-];
+const countries = feature(
+  countriesAtlas as Parameters<typeof feature>[0],
+  "countries",
+) as unknown as FeatureCollection<Geometry, { name?: string }>;
 
 export function HeroDots() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -202,26 +197,39 @@ export function HeroDots() {
       ctx.save();
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
-      ctx.strokeStyle = "rgba(245, 128, 37, 0.18)";
-      ctx.lineWidth = 1;
-      continentPaths.forEach((path) => {
-        ctx.beginPath();
-        path.forEach(([lon, lat], index) => {
+
+      const drawRing = (ring: Position[]) => {
+        let previousX: number | null = null;
+        ring.forEach((position, index) => {
+          const lon = position[0] ?? 0;
+          const lat = position[1] ?? 0;
           const point = projectLonLat(lon, lat);
-          if (index === 0) ctx.moveTo(point.x, point.y);
+          const crossesMapEdge = previousX !== null && Math.abs(point.x - previousX) > width * 0.45;
+          if (index === 0 || crossesMapEdge) ctx.moveTo(point.x, point.y);
           else ctx.lineTo(point.x, point.y);
+          previousX = point.x;
         });
+        ctx.closePath();
+      };
+
+      const drawGeometry = (geometry: Geometry) => {
+        if (geometry.type === "Polygon") {
+          geometry.coordinates.forEach(drawRing);
+        } else if (geometry.type === "MultiPolygon") {
+          geometry.coordinates.forEach((polygon) => polygon.forEach(drawRing));
+        }
+      };
+
+      countries.features.forEach((country) => {
+        const isSaudi = String(country.id) === "682" || country.properties?.name === "Saudi Arabia";
+        ctx.beginPath();
+        drawGeometry(country.geometry);
+        ctx.fillStyle = isSaudi ? "rgba(245, 128, 37, 0.13)" : "rgba(245, 128, 37, 0.012)";
+        ctx.strokeStyle = isSaudi ? "rgba(238, 111, 20, 0.98)" : "rgba(245, 128, 37, 0.22)";
+        ctx.lineWidth = isSaudi ? (width < 600 ? 1.8 : 2.7) : 0.72;
+        ctx.fill("evenodd");
         ctx.stroke();
       });
-      ctx.beginPath();
-      saudiOutline.forEach(([lon, lat], index) => {
-        const point = projectLonLat(lon, lat);
-        if (index === 0) ctx.moveTo(point.x, point.y);
-        else ctx.lineTo(point.x, point.y);
-      });
-      ctx.strokeStyle = "rgba(255, 177, 91, 0.95)";
-      ctx.lineWidth = width < 600 ? 2 : 2.8;
-      ctx.stroke();
       ctx.restore();
     };
 
