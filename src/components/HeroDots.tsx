@@ -35,6 +35,19 @@ const globalHubs: Omit<Hub, "phase">[] = [
   { lat: -23.5505, lon: -46.6333, tier: 3 }, // Sao Paulo
 ];
 
+// Simplified line-art geography keeps the hero light, legible, and responsive.
+const continentPaths: Array<Array<[number, number]>> = [
+  [[-168, 72], [-140, 70], [-125, 58], [-105, 52], [-95, 42], [-82, 25], [-98, 18], [-115, 28], [-130, 43], [-155, 52], [-168, 72]],
+  [[-82, 12], [-62, 8], [-52, -8], [-58, -28], [-70, -55], [-79, -38], [-88, -10], [-82, 12]],
+  [[-12, 36], [8, 58], [34, 70], [76, 67], [112, 56], [146, 48], [170, 35], [146, 18], [120, 8], [92, 22], [62, 8], [42, 28], [18, 12], [-2, 20], [-12, 36]],
+  [[-18, 35], [4, 36], [28, 28], [42, 8], [32, -18], [16, -35], [-4, -30], [-17, -6], [-18, 35]],
+  [[112, -10], [150, -12], [155, -28], [135, -40], [114, -30], [112, -10]],
+];
+
+const saudiOutline: Array<[number, number]> = [
+  [34.6, 29.2], [39.0, 32.2], [46.8, 32.0], [50.2, 26.0], [55.7, 25.8], [55.2, 20.0], [51.0, 16.4], [47.0, 16.0], [42.8, 17.4], [39.2, 20.5], [36.5, 22.5], [34.6, 29.2],
+];
+
 export function HeroDots() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -175,6 +188,43 @@ export function HeroDots() {
       ctx.restore();
     };
 
+    const projectLonLat = (lon: number, lat: number) => {
+      const mobile = width < 600;
+      const left = mobile ? 0.02 : 0.12;
+      const usableWidth = mobile ? 0.96 : 0.86;
+      return {
+        x: width * (left + ((lon + 180) / 360) * usableWidth),
+        y: height * (0.05 + ((90 - lat) / 180) * 0.9),
+      };
+    };
+
+    const drawWorldMap = () => {
+      ctx.save();
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "rgba(245, 128, 37, 0.18)";
+      ctx.lineWidth = 1;
+      continentPaths.forEach((path) => {
+        ctx.beginPath();
+        path.forEach(([lon, lat], index) => {
+          const point = projectLonLat(lon, lat);
+          if (index === 0) ctx.moveTo(point.x, point.y);
+          else ctx.lineTo(point.x, point.y);
+        });
+        ctx.stroke();
+      });
+      ctx.beginPath();
+      saudiOutline.forEach(([lon, lat], index) => {
+        const point = projectLonLat(lon, lat);
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.strokeStyle = "rgba(255, 177, 91, 0.95)";
+      ctx.lineWidth = width < 600 ? 2 : 2.8;
+      ctx.stroke();
+      ctx.restore();
+    };
+
     const drawSaudiBeacon = (riyadh: ScreenHub, time: number) => {
       // A small, abstract Saudi gateway marker keeps the story anchored locally
       // while the routes radiate outward to the international hubs.
@@ -208,6 +258,7 @@ export function HeroDots() {
       drawGrid();
       screenHubs = hubs.map((hub) => project(hub, time));
       const riyadh = screenHubs[0];
+      drawWorldMap();
       drawSaudiBeacon(riyadh, time);
 
       hovered = -1;

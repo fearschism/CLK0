@@ -28,11 +28,6 @@ export function HomePage() {
               </Link>
             </div>
           </div>
-          <div className="hero-visual" aria-hidden="true">
-            <div className="hero-blob soft" />
-            <div className="hero-blob" />
-            <div className="hero-photo" />
-          </div>
         </div>
       </section>
 
