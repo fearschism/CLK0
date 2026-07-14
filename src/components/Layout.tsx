@@ -95,8 +95,14 @@ export function Layout() {
           </nav>
 
           <div className="nav-actions">
-            <button className="lang-toggle" type="button" onClick={toggleLang}>
-              {lang === "en" ? "EN | AR" : "AR | EN"}
+            <button
+              className="lang-toggle flag-toggle"
+              type="button"
+              onClick={toggleLang}
+              aria-label={lang === "en" ? "Switch to Arabic" : "Switch to English"}
+              title={lang === "en" ? "العربية" : "English"}
+            >
+              <span aria-hidden="true">{lang === "en" ? "🇸🇦" : "🇺🇸"}</span>
             </button>
             <Link className="btn btn-primary" to="/contact">
               {t(copy.nav.talk)}
@@ -127,8 +133,9 @@ export function Layout() {
               </NavLink>
             ),
           )}
-          <button type="button" onClick={toggleLang}>
-            {lang === "en" ? "العربية" : "English"}
+          <button className="mobile-language" type="button" onClick={toggleLang}>
+            <span aria-hidden="true">{lang === "en" ? "🇸🇦" : "🇺🇸"}</span>
+            <span>{lang === "en" ? "العربية" : "English"}</span>
           </button>
           <Link className="btn btn-primary" to="/contact" onClick={() => setOpen(false)}>
             {t(copy.nav.talk)}

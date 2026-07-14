@@ -212,6 +212,26 @@ p {
   color: var(--orange);
 }
 
+.flag-toggle {
+  width: 42px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  font-size: 1.28rem;
+  line-height: 1;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.flag-toggle:hover {
+  border-color: var(--orange);
+  transform: translateY(-1px);
+}
+
 .menu-toggle {
   display: none;
 }
@@ -924,6 +944,226 @@ body.rtl .expertise-track {
 }
 
 /* Service detail */
+.expertise-hero {
+  padding: 3.5rem 0;
+}
+
+.expertise-hero-grid {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.expertise-hero-art {
+  min-height: 300px;
+  border-radius: calc(var(--radius) + 8px);
+  background-size: cover;
+  background-position: center;
+  box-shadow: var(--shadow);
+}
+
+.section-eyebrow {
+  display: block;
+  margin-bottom: 0.55rem;
+  color: var(--orange);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.expertise-intro p,
+.specialisations-head p {
+  max-width: 34rem;
+}
+
+.expertise-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.35rem;
+}
+
+.expertise-image-card {
+  overflow: hidden;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 4px);
+  background: #fff;
+  box-shadow: 0 12px 34px rgba(43, 43, 43, 0.07);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.expertise-image-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(245, 128, 37, 0.42);
+  box-shadow: 0 22px 55px rgba(43, 43, 43, 0.12);
+}
+
+.expertise-card-visual {
+  position: relative;
+  min-height: 255px;
+  background-size: 400% 100%;
+  background-repeat: no-repeat;
+  transition: transform 0.6s ease;
+}
+
+.expertise-image-card:hover .expertise-card-visual {
+  transform: scale(1.025);
+}
+
+.expertise-number {
+  position: absolute;
+  inset-inline-start: 1rem;
+  top: 1rem;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(33, 33, 33, 0.88);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(8px);
+}
+
+.expertise-card-content {
+  padding: 1.5rem 1.5rem 1.65rem;
+}
+
+.expertise-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.65rem;
+}
+
+.expertise-card-heading h2 {
+  font-size: 1.55rem;
+}
+
+.expertise-card-heading span {
+  color: var(--orange);
+  font-size: 1.4rem;
+  transition: transform 0.25s ease;
+}
+
+.expertise-image-card:hover .expertise-card-heading span {
+  transform: translate(3px, -3px);
+}
+
+.expertise-card-content > p,
+.specialisation-card p {
+  color: var(--ink-soft);
+}
+
+.expertise-card-content ul {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.expertise-card-content li {
+  position: relative;
+  padding-inline-start: 1.15rem;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+.expertise-card-content li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.62rem;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--orange);
+}
+
+.specialisations-head {
+  margin-top: 5rem;
+}
+
+.specialisation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.specialisation-card {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: 190px;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.specialisation-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245, 128, 37, 0.45);
+}
+
+.specialisation-card h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.specialisation-art {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  min-height: 155px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #ffd8b5, var(--orange));
+}
+
+.specialisation-art span {
+  position: absolute;
+  inset-inline-start: 1rem;
+  top: 0.8rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.specialisation-art i {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.specialisation-art i:nth-of-type(1) {
+  width: 100px;
+  height: 100px;
+  inset-inline-end: -20px;
+  bottom: -15px;
+}
+
+.specialisation-art i:nth-of-type(2) {
+  width: 52px;
+  height: 52px;
+  inset-inline-end: 50px;
+  bottom: 25px;
+}
+
+.specialisation-art i:nth-of-type(3) {
+  width: 20px;
+  height: 20px;
+  inset-inline-start: 24px;
+  bottom: 22px;
+}
+
 .service-detail {
   display: grid;
   gap: 0;
@@ -1351,8 +1591,13 @@ body.rtl .expertise-track {
   .hero-grid,
   .about-grid,
   .service-card,
-  .contact-grid {
+  .contact-grid,
+  .expertise-hero-grid {
     grid-template-columns: 1fr;
+  }
+
+  .expertise-hero-art {
+    min-height: 240px;
   }
 
   .pillar-grid,
@@ -1407,6 +1652,16 @@ body.rtl .expertise-track {
     color: var(--orange);
   }
 
+  .mobile-language {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .mobile-language span:first-child {
+    font-size: 1.35rem;
+  }
+
   .section-head {
     flex-direction: column;
     align-items: start;
@@ -1452,6 +1707,19 @@ body.rtl .expertise-track {
   .client-logo-card {
     min-height: 125px;
     padding: 1rem;
+  }
+
+  .expertise-card-grid,
+  .specialisation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .expertise-card-visual {
+    min-height: 220px;
+  }
+
+  .specialisation-card {
+    grid-template-columns: 105px 1fr;
   }
 
   .container,
