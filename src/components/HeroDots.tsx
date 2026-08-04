@@ -232,9 +232,9 @@ export function HeroDots() {
         const isSaudi = String(country.id) === "682" || country.properties?.name === "Saudi Arabia";
         ctx.beginPath();
         drawGeometry(country.geometry);
-        ctx.fillStyle = isSaudi ? "rgba(245, 128, 37, 0.13)" : "rgba(245, 128, 37, 0.012)";
-        ctx.strokeStyle = isSaudi ? "rgba(238, 111, 20, 0.98)" : "rgba(245, 128, 37, 0.22)";
-        ctx.lineWidth = isSaudi ? (width < 600 ? 1.8 : 2.7) : 0.72;
+        ctx.fillStyle = isSaudi ? "rgba(245, 128, 37, 0.18)" : "rgba(245, 128, 37, 0.025)";
+        ctx.strokeStyle = isSaudi ? "rgba(238, 111, 20, 1)" : "rgba(245, 128, 37, 0.38)";
+        ctx.lineWidth = isSaudi ? (width < 600 ? 2 : 3) : 0.85;
         ctx.fill("evenodd");
         ctx.stroke();
       });
@@ -304,14 +304,14 @@ export function HeroDots() {
         const control = controlPoint(riyadh, hub, index);
         const highlighted = hovered === index || hovered === 0;
         const gradient = ctx.createLinearGradient(riyadh.x, riyadh.y, hub.x, hub.y);
-        gradient.addColorStop(0, `rgba(224, 106, 18, ${highlighted ? 0.52 : 0.28})`);
-        gradient.addColorStop(0.58, `rgba(245, 128, 37, ${highlighted ? 0.34 : 0.15})`);
-        gradient.addColorStop(1, `rgba(245, 128, 37, ${highlighted ? 0.2 : 0.08})`);
+        gradient.addColorStop(0, `rgba(224, 106, 18, ${highlighted ? 0.6 : 0.42})`);
+        gradient.addColorStop(0.58, `rgba(245, 128, 37, ${highlighted ? 0.4 : 0.24})`);
+        gradient.addColorStop(1, `rgba(245, 128, 37, ${highlighted ? 0.24 : 0.13})`);
         ctx.beginPath();
         ctx.moveTo(riyadh.x, riyadh.y);
         ctx.quadraticCurveTo(control.x, control.y, hub.x, hub.y);
         ctx.strokeStyle = gradient;
-        ctx.lineWidth = highlighted ? 1.5 : 0.8;
+        ctx.lineWidth = highlighted ? 1.7 : 1.05;
         ctx.stroke();
       });
 
@@ -343,7 +343,7 @@ export function HeroDots() {
         ctx.fill();
         ctx.beginPath();
         ctx.arc(hub.x, hub.y, radius + breathing * 0.35, 0, Math.PI * 2);
-        ctx.fillStyle = index === 0 ? "rgba(224, 106, 18, 0.95)" : active ? "rgba(245, 128, 37, 0.78)" : "rgba(245, 128, 37, 0.42)";
+        ctx.fillStyle = index === 0 ? "rgba(224, 106, 18, 0.95)" : active ? "rgba(245, 128, 37, 0.85)" : "rgba(245, 128, 37, 0.6)";
         ctx.fill();
       });
 
@@ -351,8 +351,8 @@ export function HeroDots() {
         const wave = (time % 2200) / 2200;
         ctx.beginPath();
         ctx.arc(riyadh.x, riyadh.y, 10 + wave * (width < 600 ? 48 : 72), 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(245, 128, 37, ${0.22 * (1 - wave)})`;
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = `rgba(245, 128, 37, ${0.32 * (1 - wave)})`;
+        ctx.lineWidth = 1.3;
         ctx.stroke();
         raf = window.requestAnimationFrame(draw);
       }

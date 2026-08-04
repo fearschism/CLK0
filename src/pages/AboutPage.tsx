@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { CountUp } from "../components/CountUp";
 import { Reveal } from "../components/Reveal";
 import { contact, team, values } from "../data";
 import { useCopy, useI18n } from "../i18n";
@@ -47,19 +48,19 @@ export function AboutPage() {
               <div className="network-stats">
                 <div className="network-stat">
                   <div>
-                    <strong>66</strong>
+                    <strong><CountUp end={66} /></strong>
                     <span>{t(copy.common.members)}</span>
                   </div>
                 </div>
                 <div className="network-stat">
                   <div>
-                    <strong>58</strong>
+                    <strong><CountUp end={58} /></strong>
                     <span>{t(copy.common.countries)}</span>
                   </div>
                 </div>
                 <div className="network-stat">
                   <div>
-                    <strong>266</strong>
+                    <strong><CountUp end={266} /></strong>
                     <span>{t(copy.common.hubs)}</span>
                   </div>
                 </div>
