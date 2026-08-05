@@ -1,11 +1,18 @@
 /*
- * AI-in-Cybersecurity Maturity Framework
- * ---------------------------------------
- * Single source of truth for the assessment model: maturity scale, domains,
- * weighted questions and the register of assessed entities.
+ * Question bank and assessment model
+ * ----------------------------------
+ * Single source of truth for the annual return. Two audiences read this file:
  *
- * Loaded as a classic script (no ES modules / no fetch) so that every page in
- * this toolkit also works when opened directly from disk via file://.
+ *   - the questionnaire (index.html) renders `sections` as plain questions and
+ *     never shows a score, a weight or a maturity level;
+ *   - the governing body console (console.html) uses the same definitions,
+ *     plus the hidden scores below, to rate and compare returns.
+ *
+ * Every scored answer option carries its own score, so respondents answer in
+ * plain language ("Yes", "Reviewed every three months") and the rating is
+ * derived afterwards rather than asked for directly.
+ *
+ * Loaded as a classic script so both pages also work when opened over file://.
  */
 window.AIMA = window.AIMA || {};
 
@@ -13,50 +20,127 @@ window.AIMA = window.AIMA || {};
   'use strict';
 
   AIMA.meta = {
-    schemaVersion: '1.0.0',
-    frameworkVersion: '2026.1',
-    title: 'AI in Cybersecurity Maturity Assessment',
-    owner: 'Health Sector Governing Body — Cybersecurity Directorate',
-    subtitle: 'Sector-wide assessment of how member entities adopt artificial intelligence within their cybersecurity programme',
-    references: [
-      'NIST AI Risk Management Framework (AI RMF 1.0)',
-      'NIST Cybersecurity Framework 2.0',
-      'ISO/IEC 42001 — AI management systems',
-      'ISO/IEC 27001:2022 — Information security management',
-      'HHS HICP / health-sector cybersecurity practices'
-    ]
+    schemaVersion: '2.0.0',
+    frameworkVersion: '2026.2',
+    title: 'AI Cyber Assurance Return',
+    subtitle: 'Annual return on the security of artificial intelligence use',
+    estimatedMinutes: 15
   };
 
   /* ------------------------------------------------------------------ *
-   * Maturity scale
+   * Reference frameworks
+   * The question set is mapped to these; the console shows the coverage.
    * ------------------------------------------------------------------ */
 
-  // Answer options for every question. `value` feeds the scoring engine.
-  AIMA.scale = [
-    { value: 0, label: 'None', short: '0', description: 'Not in place. No activity, tooling or intent recorded.' },
-    { value: 1, label: 'Initial', short: '1', description: 'Ad-hoc and undocumented. Depends on individual effort or a one-off trial.' },
-    { value: 2, label: 'Developing', short: '2', description: 'Partially implemented or piloted. Inconsistent across the entity.' },
-    { value: 3, label: 'Defined', short: '3', description: 'Documented, approved and consistently applied across critical scope.' },
-    { value: 4, label: 'Managed', short: '4', description: 'Measured with KPIs, broad coverage, reviewed and reported regularly.' },
-    { value: 5, label: 'Optimising', short: '5', description: 'Continuously improved, largely automated and benchmarked against peers.' }
+  AIMA.frameworks = [
+    {
+      key: 'AIRMF',
+      name: 'NIST AI Risk Management Framework 1.0',
+      short: 'NIST AI RMF',
+      publisher: 'NIST',
+      year: 2023,
+      note: 'GOVERN, MAP, MEASURE and MANAGE functions for trustworthy AI.'
+    },
+    {
+      key: 'GENAI',
+      name: 'NIST AI 600-1 — Generative AI Profile',
+      short: 'NIST AI 600-1',
+      publisher: 'NIST',
+      year: 2024,
+      note: 'Companion profile for generative AI risks, including data leakage and confabulation.'
+    },
+    {
+      key: 'OWASP',
+      name: 'OWASP Top 10 for LLM Applications 2025',
+      short: 'OWASP LLM Top 10 (2025)',
+      publisher: 'OWASP',
+      year: 2025,
+      note: 'The current list of large language model risks: prompt injection, sensitive information disclosure, supply chain, excessive agency and more.'
+    },
+    {
+      key: 'ISO42001',
+      name: 'ISO/IEC 42001:2023 — AI management systems',
+      short: 'ISO/IEC 42001',
+      publisher: 'ISO/IEC',
+      year: 2023,
+      note: 'Certifiable management system standard for AI, including Annex A controls.'
+    },
+    {
+      key: 'SECAI',
+      name: 'Guidelines for Secure AI System Development',
+      short: 'CISA / NCSC secure AI',
+      publisher: 'CISA, NCSC and international partners',
+      year: 2023,
+      note: 'Secure design, development, deployment, and operation and maintenance of AI systems.'
+    },
+    {
+      key: 'ATLAS',
+      name: 'MITRE ATLAS',
+      short: 'MITRE ATLAS',
+      publisher: 'MITRE',
+      year: 2024,
+      note: 'Adversary tactics and techniques against AI-enabled systems; the basis for AI red teaming.'
+    },
+    {
+      key: 'CSF',
+      name: 'NIST Cybersecurity Framework 2.0',
+      short: 'NIST CSF 2.0',
+      publisher: 'NIST',
+      year: 2024,
+      note: 'Underlying cybersecurity outcomes, used here for detection and response questions.'
+    },
+    {
+      key: 'HEALTH',
+      name: 'Health sector cyber practice — HITRUST AI security assessment and HHS 405(d) HICP',
+      short: 'HITRUST AI / HHS HICP',
+      publisher: 'HITRUST, US HHS',
+      year: 2024,
+      note: 'Health-specific expectations for AI assurance, medical devices and clinical continuity.'
+    },
+    {
+      key: 'AIACT',
+      name: 'EU AI Act (Regulation 2024/1689)',
+      short: 'EU AI Act',
+      publisher: 'European Union',
+      year: 2024,
+      note: 'Risk management, human oversight (Art. 14) and accuracy, robustness and cybersecurity (Art. 15).'
+    }
   ];
+
+  AIMA.getFramework = function (key) {
+    return AIMA.frameworks.filter(function (f) { return f.key === key; })[0] || null;
+  };
+
+  /* ------------------------------------------------------------------ *
+   * Rating model (governing body only — never shown in the questionnaire)
+   * ------------------------------------------------------------------ */
+
+  // Fixed scores for the yes / no / not sure question type.
+  AIMA.yesNoScores = { yes: 5, no: 0, unsure: 1 };
 
   AIMA.NOT_APPLICABLE = 'na';
 
-  // Maturity levels. `min`/`max` are inclusive bounds on the 0–5 score.
+  AIMA.yesNoOptions = [
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' },
+    { value: 'unsure', label: 'Not sure' }
+  ];
+
+  AIMA.notApplicableOption = { value: AIMA.NOT_APPLICABLE, label: 'Not applicable' };
+
   AIMA.levels = [
-    { level: 1, name: 'Initial',    min: 0.00, max: 1.49, color: '#dc2626', tint: '#fee2e2', description: 'AI use in cybersecurity is absent or experimental, with no governance or measurement.' },
-    { level: 2, name: 'Developing', min: 1.50, max: 2.49, color: '#ea580c', tint: '#ffedd5', description: 'Isolated pilots and vendor defaults. Value is unproven and coverage is partial.' },
-    { level: 3, name: 'Defined',    min: 2.50, max: 3.49, color: '#ca8a04', tint: '#fef9c3', description: 'Documented and repeatable AI-enabled practices applied across critical systems.' },
-    { level: 4, name: 'Managed',    min: 3.50, max: 4.49, color: '#0d9488', tint: '#ccfbf1', description: 'AI is integrated into security operations, measured with KPIs and governed end to end.' },
-    { level: 5, name: 'Optimising', min: 4.50, max: 5.00, color: '#1d4ed8', tint: '#dbeafe', description: 'Continuous improvement, automation at scale and sector leadership on AI assurance.' }
+    { level: 1, name: 'Not established', min: 0.00, max: 1.49, color: '#c0392b', tint: '#fdecea', description: 'Little or no control over how AI is used. Basic rules, ownership and visibility are missing.' },
+    { level: 2, name: 'Emerging',        min: 1.50, max: 2.49, color: '#d97706', tint: '#fef3e2', description: 'Some controls exist but they are informal, partial or unevenly applied.' },
+    { level: 3, name: 'Established',     min: 2.50, max: 3.49, color: '#b7950b', tint: '#fdf6d8', description: 'Documented rules and controls are in place and applied across the areas that matter most.' },
+    { level: 4, name: 'Managed',         min: 3.50, max: 4.49, color: '#0e8b7d', tint: '#e6f4f1', description: 'Controls are consistently applied, checked and measured, and cover clinical systems.' },
+    { level: 5, name: 'Leading',         min: 4.50, max: 5.00, color: '#123e5c', tint: '#e7eef4', description: 'Controls are automated, continuously tested and ahead of sector expectations.' }
   ];
 
   AIMA.defaultTargetLevel = 4;
 
   /* ------------------------------------------------------------------ *
-   * Entity register — 30 member entities of the governing body
-   * Edit the names/types/regions here to match your own organisation.
+   * Register of reporting organisations
+   * Replace these 30 entries with the client's own register.
    * ------------------------------------------------------------------ */
 
   AIMA.entityTypes = [
@@ -75,203 +159,689 @@ window.AIMA = window.AIMA || {};
   AIMA.regions = ['Central', 'North', 'South', 'East', 'West'];
 
   AIMA.entitySizes = [
-    'Small (< 500 staff)',
-    'Medium (500–2,000 staff)',
-    'Large (2,000–10,000 staff)',
-    'Very large (> 10,000 staff)'
+    'Small (under 500 staff)',
+    'Medium (500 to 2,000 staff)',
+    'Large (2,000 to 10,000 staff)',
+    'Very large (over 10,000 staff)'
   ];
 
   AIMA.entities = [
-    { code: 'E01', name: 'Central Medical City',                        type: 'Tertiary Hospital',        region: 'Central', size: 'Very large (> 10,000 staff)' },
-    { code: 'E02', name: 'Northern Teaching Hospital',                   type: 'Tertiary Hospital',        region: 'North',   size: 'Large (2,000–10,000 staff)' },
-    { code: 'E03', name: 'Southern Regional Hospital',                   type: 'General Hospital',         region: 'South',   size: 'Large (2,000–10,000 staff)' },
-    { code: 'E04', name: 'Eastern Regional Hospital',                    type: 'General Hospital',         region: 'East',    size: 'Large (2,000–10,000 staff)' },
-    { code: 'E05', name: 'Western Regional Hospital',                    type: 'General Hospital',         region: 'West',    size: 'Large (2,000–10,000 staff)' },
-    { code: 'E06', name: 'Capital General Hospital',                     type: 'General Hospital',         region: 'Central', size: 'Medium (500–2,000 staff)' },
-    { code: 'E07', name: "Children's Specialty Hospital",                type: 'Specialty Hospital',       region: 'Central', size: 'Medium (500–2,000 staff)' },
-    { code: 'E08', name: "Maternity & Women's Hospital",                 type: 'Specialty Hospital',       region: 'Central', size: 'Medium (500–2,000 staff)' },
-    { code: 'E09', name: 'National Oncology Centre',                     type: 'Specialty Hospital',       region: 'Central', size: 'Medium (500–2,000 staff)' },
-    { code: 'E10', name: 'Cardiac Care Centre',                          type: 'Specialty Hospital',       region: 'North',   size: 'Medium (500–2,000 staff)' },
-    { code: 'E11', name: 'Behavioural Health Hospital',                  type: 'Specialty Hospital',       region: 'South',   size: 'Medium (500–2,000 staff)' },
-    { code: 'E12', name: 'Rehabilitation & Long-Term Care Hospital',     type: 'Specialty Hospital',       region: 'East',    size: 'Small (< 500 staff)' },
-    { code: 'E13', name: 'Ophthalmology Hospital',                       type: 'Specialty Hospital',       region: 'West',    size: 'Small (< 500 staff)' },
-    { code: 'E14', name: 'Central Primary Care Cluster',                 type: 'Primary Care Cluster',     region: 'Central', size: 'Large (2,000–10,000 staff)' },
-    { code: 'E15', name: 'Northern Primary Care Cluster',                type: 'Primary Care Cluster',     region: 'North',   size: 'Medium (500–2,000 staff)' },
-    { code: 'E16', name: 'Southern Primary Care Cluster',                type: 'Primary Care Cluster',     region: 'South',   size: 'Medium (500–2,000 staff)' },
-    { code: 'E17', name: 'Eastern Primary Care Cluster',                 type: 'Primary Care Cluster',     region: 'East',    size: 'Medium (500–2,000 staff)' },
-    { code: 'E18', name: 'Western Primary Care Cluster',                 type: 'Primary Care Cluster',     region: 'West',    size: 'Medium (500–2,000 staff)' },
-    { code: 'E19', name: 'National Reference Laboratory',                type: 'Diagnostics & Laboratories', region: 'Central', size: 'Medium (500–2,000 staff)' },
-    { code: 'E20', name: 'Regional Diagnostics & Imaging Network',       type: 'Diagnostics & Laboratories', region: 'North',   size: 'Medium (500–2,000 staff)' },
-    { code: 'E21', name: 'National Blood & Tissue Services',             type: 'Diagnostics & Laboratories', region: 'Central', size: 'Medium (500–2,000 staff)' },
-    { code: 'E22', name: 'Public Health & Epidemiology Authority',       type: 'Public Health',            region: 'Central', size: 'Medium (500–2,000 staff)' },
-    { code: 'E23', name: 'Health Emergency Operations Centre',           type: 'Public Health',            region: 'Central', size: 'Small (< 500 staff)' },
-    { code: 'E24', name: 'National Ambulance & Emergency Services',      type: 'Emergency Services',       region: 'Central', size: 'Large (2,000–10,000 staff)' },
-    { code: 'E25', name: 'Health Insurance & Claims Authority',          type: 'Insurance & Claims',       region: 'Central', size: 'Medium (500–2,000 staff)' },
-    { code: 'E26', name: 'Pharmaceutical Supply & Logistics Authority',  type: 'Shared Services',          region: 'Central', size: 'Medium (500–2,000 staff)' },
-    { code: 'E27', name: 'Health Information Exchange & Digital Platforms', type: 'Shared Services',       region: 'Central', size: 'Large (2,000–10,000 staff)' },
-    { code: 'E28', name: 'Medical Research Institute',                   type: 'Research & Academia',      region: 'Central', size: 'Small (< 500 staff)' },
-    { code: 'E29', name: 'Health Workforce Training Academy',            type: 'Research & Academia',      region: 'Central', size: 'Small (< 500 staff)' },
-    { code: 'E30', name: 'Facilities & Biomedical Engineering Services', type: 'Shared Services',          region: 'Central', size: 'Medium (500–2,000 staff)' }
+    { code: 'E01', name: 'Central Medical City',                          type: 'Tertiary Hospital',          region: 'Central', size: 'Very large (over 10,000 staff)' },
+    { code: 'E02', name: 'Northern Teaching Hospital',                     type: 'Tertiary Hospital',          region: 'North',   size: 'Large (2,000 to 10,000 staff)' },
+    { code: 'E03', name: 'Southern Regional Hospital',                     type: 'General Hospital',           region: 'South',   size: 'Large (2,000 to 10,000 staff)' },
+    { code: 'E04', name: 'Eastern Regional Hospital',                      type: 'General Hospital',           region: 'East',    size: 'Large (2,000 to 10,000 staff)' },
+    { code: 'E05', name: 'Western Regional Hospital',                      type: 'General Hospital',           region: 'West',    size: 'Large (2,000 to 10,000 staff)' },
+    { code: 'E06', name: 'Capital General Hospital',                       type: 'General Hospital',           region: 'Central', size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E07', name: "Children's Specialty Hospital",                  type: 'Specialty Hospital',         region: 'Central', size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E08', name: "Maternity & Women's Hospital",                   type: 'Specialty Hospital',         region: 'Central', size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E09', name: 'National Oncology Centre',                       type: 'Specialty Hospital',         region: 'Central', size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E10', name: 'Cardiac Care Centre',                            type: 'Specialty Hospital',         region: 'North',   size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E11', name: 'Behavioural Health Hospital',                     type: 'Specialty Hospital',         region: 'South',   size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E12', name: 'Rehabilitation & Long-Term Care Hospital',        type: 'Specialty Hospital',         region: 'East',    size: 'Small (under 500 staff)' },
+    { code: 'E13', name: 'Ophthalmology Hospital',                          type: 'Specialty Hospital',         region: 'West',    size: 'Small (under 500 staff)' },
+    { code: 'E14', name: 'Central Primary Care Cluster',                    type: 'Primary Care Cluster',       region: 'Central', size: 'Large (2,000 to 10,000 staff)' },
+    { code: 'E15', name: 'Northern Primary Care Cluster',                   type: 'Primary Care Cluster',       region: 'North',   size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E16', name: 'Southern Primary Care Cluster',                   type: 'Primary Care Cluster',       region: 'South',   size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E17', name: 'Eastern Primary Care Cluster',                    type: 'Primary Care Cluster',       region: 'East',    size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E18', name: 'Western Primary Care Cluster',                    type: 'Primary Care Cluster',       region: 'West',    size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E19', name: 'National Reference Laboratory',                   type: 'Diagnostics & Laboratories', region: 'Central', size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E20', name: 'Regional Diagnostics & Imaging Network',          type: 'Diagnostics & Laboratories', region: 'North',   size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E21', name: 'National Blood & Tissue Services',                type: 'Diagnostics & Laboratories', region: 'Central', size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E22', name: 'Public Health & Epidemiology Authority',          type: 'Public Health',              region: 'Central', size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E23', name: 'Health Emergency Operations Centre',              type: 'Public Health',              region: 'Central', size: 'Small (under 500 staff)' },
+    { code: 'E24', name: 'National Ambulance & Emergency Services',         type: 'Emergency Services',         region: 'Central', size: 'Large (2,000 to 10,000 staff)' },
+    { code: 'E25', name: 'Health Insurance & Claims Authority',             type: 'Insurance & Claims',         region: 'Central', size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E26', name: 'Pharmaceutical Supply & Logistics Authority',     type: 'Shared Services',            region: 'Central', size: 'Medium (500 to 2,000 staff)' },
+    { code: 'E27', name: 'Health Information Exchange & Digital Platforms', type: 'Shared Services',            region: 'Central', size: 'Large (2,000 to 10,000 staff)' },
+    { code: 'E28', name: 'Medical Research Institute',                      type: 'Research & Academia',        region: 'Central', size: 'Small (under 500 staff)' },
+    { code: 'E29', name: 'Health Workforce Training Academy',               type: 'Research & Academia',        region: 'Central', size: 'Small (under 500 staff)' },
+    { code: 'E30', name: 'Facilities & Biomedical Engineering Services',    type: 'Shared Services',            region: 'Central', size: 'Medium (500 to 2,000 staff)' }
   ];
 
   /* ------------------------------------------------------------------ *
-   * Domains and questions
-   * Domain weights are percentages and must total 100.
-   * Question weights are relative within their domain (1 = standard, 1.5 = critical).
+   * Sections and questions
+   *
+   * Section weights are percentages and must total 100.
+   * Question weight 1.5 marks a core control, 1 a standard one.
+   * `type` is one of: yesno | choice | multi | number | text
+   * `informational: true` records context without affecting the rating.
    * ------------------------------------------------------------------ */
 
-  AIMA.domains = [
+  AIMA.sections = [
     {
-      id: 'GOV',
-      name: 'AI Governance, Policy & Accountability',
-      weight: 12,
-      description: 'Mandate, policy and oversight for the use of AI inside the cybersecurity function.',
+      id: 'A',
+      title: 'Rules and responsibility for AI',
+      weight: 11,
+      intro: 'These questions are about who decides how AI may be used in your organisation, and what rules staff have to follow.',
+      refs: [
+        { key: 'AIRMF', cite: 'GOVERN function' },
+        { key: 'ISO42001', cite: 'Annex A.2 AI policy, A.3 internal organisation' },
+        { key: 'AIACT', cite: 'Risk management obligations' }
+      ],
       questions: [
-        { id: 'GOV-1', weight: 1.5, text: 'An approved policy governs the use of AI/ML within cybersecurity, covering acceptable use, data handling and human oversight.', help: 'Look for a signed policy or standard that explicitly names AI/ML and GenAI use in security operations.', remedy: 'Issue an AI-in-security policy covering approved use cases, data handling, human oversight and prohibited uses.' },
-        { id: 'GOV-2', weight: 1.0, text: 'A named owner or committee is accountable for AI-in-security decisions, with a documented mandate and escalation path.', help: 'A CISO-chaired AI review board, or AI risk items formally delegated to an existing security governance committee.', remedy: 'Assign accountability for AI-in-security to a named owner or committee with a written mandate and escalation route.' },
-        { id: 'GOV-3', weight: 1.5, text: 'A current register of AI capabilities used in security exists (vendor features, models, agents, in-house scripts).', help: 'Includes AI features embedded in existing tools, not only standalone AI products.', remedy: 'Build and maintain a register of AI capabilities used in security, including embedded vendor AI features.' },
-        { id: 'GOV-4', weight: 1.0, text: 'Every AI security use case passes a documented risk assessment before deployment (privacy, bias, error impact, patient safety).', help: 'Evidence: completed assessments with named reviewers and residual-risk decisions.', remedy: 'Introduce a pre-deployment AI risk assessment gate that considers privacy, error impact and clinical safety.' },
-        { id: 'GOV-5', weight: 1.0, text: 'AI security practices are mapped to recognised frameworks (NIST AI RMF, ISO/IEC 42001, NIST CSF 2.0) and to regulatory obligations.', help: 'A traceability matrix or control mapping maintained and reviewed.', remedy: 'Map current AI security practices to NIST AI RMF and ISO/IEC 42001 and close the identified control gaps.' },
-        { id: 'GOV-6', weight: 1.0, text: 'Human-in-the-loop and override requirements are defined for AI-driven security decisions that can affect clinical services.', help: 'Explicit rules on which actions may never run without human approval.', remedy: 'Define mandatory human approval and override rules for AI actions touching clinical systems.' }
+        {
+          id: 'A1', type: 'yesno', weight: 1.5,
+          text: 'Has your organisation approved a written rule or policy covering how staff may use AI tools, including chatbots such as ChatGPT, Copilot or Gemini?',
+          hint: 'Answer Yes only if the document has been formally approved. A draft does not count.',
+          refs: [{ key: 'AIRMF', cite: 'GOVERN' }, { key: 'ISO42001', cite: 'A.2' }],
+          remedy: 'Approve and publish a written policy covering how staff may use AI tools.'
+        },
+        {
+          id: 'A2', type: 'yesno', weight: 1.5,
+          text: 'Is there one named person responsible for decisions about AI risk?',
+          hint: 'For example the Chief Information Security Officer, the Chief Medical Information Officer, or a named AI lead.',
+          refs: [{ key: 'AIRMF', cite: 'GOVERN' }, { key: 'ISO42001', cite: 'A.3' }],
+          remedy: 'Name a single accountable owner for AI risk decisions and record it in the governance structure.'
+        },
+        {
+          id: 'A3', type: 'multi', weight: 1.0,
+          text: 'Which of the following does your AI rule or policy actually cover?',
+          hint: 'Tick everything that is written down. Leave the rest blank.',
+          options: [
+            { value: 'approved-tools', label: 'A list of AI tools staff are allowed to use', points: 1 },
+            { value: 'data-limits', label: 'What information must never be entered into an AI tool', points: 1 },
+            { value: 'human-check', label: 'When a person must check what the AI produced', points: 1 },
+            { value: 'banned-uses', label: 'Uses that are banned outright', points: 1 },
+            { value: 'consequences', label: 'What happens if someone breaks the rules', points: 1 }
+          ],
+          noneLabel: 'None of these are covered',
+          refs: [{ key: 'ISO42001', cite: 'A.2, A.9' }, { key: 'GENAI', cite: 'Acceptable use' }],
+          remedy: 'Expand the AI policy so it covers approved tools, data limits, human checks, banned uses and consequences.'
+        },
+        {
+          id: 'A4', type: 'choice', weight: 1.0,
+          text: 'How often does a committee or senior group review AI use and AI risk?',
+          hint: 'Pick the closest answer.',
+          options: [
+            { value: 'never', label: 'Never', score: 0 },
+            { value: 'incident', label: 'Only when a problem happens', score: 1 },
+            { value: 'annual', label: 'At least once a year', score: 3 },
+            { value: 'quarterly', label: 'At least every three months', score: 4 },
+            { value: 'monthly', label: 'Monthly or continuously', score: 5 }
+          ],
+          refs: [{ key: 'AIRMF', cite: 'GOVERN' }, { key: 'ISO42001', cite: 'Management review' }],
+          remedy: 'Put AI use and AI risk on a senior committee agenda at least quarterly.'
+        },
+        {
+          id: 'A5', type: 'yesno', weight: 1.0,
+          text: 'Is AI risk assessed and signed off before a new AI tool is used with real patient or business information?',
+          hint: 'This means a documented check before go-live, not after.',
+          refs: [{ key: 'AIRMF', cite: 'MAP' }, { key: 'ISO42001', cite: 'A.5 impact assessment' }, { key: 'AIACT', cite: 'Art. 9' }],
+          remedy: 'Introduce a documented pre-deployment risk assessment and sign-off for new AI tools.'
+        }
       ]
     },
+
     {
-      id: 'STR',
-      name: 'Strategy, Roadmap & Investment',
-      weight: 8,
-      description: 'Whether AI adoption in security is deliberate, funded and measured for value.',
-      questions: [
-        { id: 'STR-1', weight: 1.5, text: 'A documented multi-year roadmap sets out prioritised AI use cases for cybersecurity.', help: 'Prioritisation should reference risk reduction, not only technology availability.', remedy: 'Publish a prioritised AI-in-security roadmap tied to the entity risk register.' },
-        { id: 'STR-2', weight: 1.0, text: 'Budget is explicitly allocated to AI security capability (tooling, data engineering, skills).', help: 'Ring-fenced line items rather than opportunistic spend.', remedy: 'Secure a dedicated budget line for AI security capability including data engineering and skills.' },
-        { id: 'STR-3', weight: 1.0, text: 'A business case and value measurement exist for AI investments (e.g. MTTD/MTTR reduction, analyst effort saved, coverage gained).', help: 'Baseline metrics captured before deployment and compared afterwards.', remedy: 'Define baseline metrics and post-deployment benefit tracking for each AI security investment.' },
-        { id: 'STR-4', weight: 1.0, text: 'AI security plans are coordinated with the governing body’s central programmes and reuse shared or national services where available.', help: 'Avoids duplicated licences and inconsistent controls across entities.', remedy: 'Align the entity roadmap with central/shared AI security services offered by the governing body.' },
-        { id: 'STR-5', weight: 1.0, text: 'Progress on AI in cybersecurity is reported to executive leadership at least quarterly.', help: 'Board or executive pack with AI-specific metrics and risks.', remedy: 'Add AI-in-security metrics and risks to the quarterly executive security report.' }
-      ]
-    },
-    {
-      id: 'DAT',
-      name: 'Data Foundation, Telemetry & Integration',
-      weight: 12,
-      description: 'The data quality, coverage and privacy controls that any AI security capability depends on.',
-      questions: [
-        { id: 'DAT-1', weight: 1.5, text: 'Security telemetry is centrally collected across endpoint, network, identity, cloud, clinical applications and medical devices.', help: 'Coverage gaps should be known and tracked, not assumed.', remedy: 'Extend central telemetry collection to the domains with no coverage, starting with clinical applications and medical devices.' },
-        { id: 'DAT-2', weight: 1.5, text: 'Log retention, normalisation and time synchronisation are sufficient to support analytics and model tuning.', help: 'Consistent schema, reliable timestamps, retention aligned to investigation needs.', remedy: 'Normalise log schemas and align retention and time synchronisation with analytics requirements.' },
-        { id: 'DAT-3', weight: 1.0, text: 'A central data platform (SIEM, data lake or equivalent) with documented pipelines feeds the AI/analytics use cases.', help: 'Pipelines documented, monitored and owned.', remedy: 'Consolidate security data into a governed platform with documented, monitored pipelines.' },
-        { id: 'DAT-4', weight: 1.5, text: 'Data classification, minimisation and masking of patient data are applied before it is used in AI analytics.', help: 'Critical where telemetry or tickets may contain PHI, and where vendor AI processes data off-premise.', remedy: 'Apply PHI minimisation and masking to any data flowing into AI analytics or vendor AI services.' },
-        { id: 'DAT-5', weight: 1.0, text: 'Asset, identity and medical-device inventories are accurate enough to enrich AI detections.', help: 'CMDB, IoMT inventory and HR/identity feeds joined to security events.', remedy: 'Improve asset, identity and IoMT inventory accuracy and join them to security event enrichment.' },
-        { id: 'DAT-6', weight: 1.0, text: 'Data quality is monitored and issues feed back into detection and model tuning.', help: 'Alerts on log source silence, parsing failures and schema drift.', remedy: 'Monitor log source health and schema drift, and route findings into detection tuning.' }
-      ]
-    },
-    {
-      id: 'DET',
-      name: 'AI-Driven Threat Detection & Monitoring',
-      weight: 14,
-      description: 'Use of behavioural analytics and machine learning to find threats earlier and reduce analyst noise.',
-      questions: [
-        { id: 'DET-1', weight: 1.5, text: 'Behavioural analytics and anomaly detection (UEBA, NDR or equivalent) are deployed and tuned beyond vendor defaults.', help: 'Tuning evidence: suppressed noisy baselines, entity-specific thresholds.', remedy: 'Deploy and locally tune behavioural analytics rather than relying on out-of-the-box vendor baselines.' },
-        { id: 'DET-2', weight: 1.5, text: 'AI assists alert triage: correlation, deduplication, enrichment and risk-based prioritisation in the SOC queue.', help: 'Measured reduction in alert volume reaching analysts.', remedy: 'Introduce AI-assisted correlation and risk-based prioritisation to reduce the analyst alert queue.' },
-        { id: 'DET-3', weight: 1.5, text: 'AI-enabled detection covers the critical clinical estate (EMR/HIS, PACS, laboratory, pharmacy, scheduling).', help: 'Clinical systems are often excluded from advanced analytics.', remedy: 'Extend AI-enabled detection coverage to EMR/HIS, PACS, laboratory and pharmacy systems.' },
-        { id: 'DET-4', weight: 1.0, text: 'Detection engineering measures the precision, recall and false-positive rate of AI-driven detections.', help: 'Regular review of detection performance with retirement of poor performers.', remedy: 'Track precision and false-positive rates per AI detection and retire or retune poor performers.' },
-        { id: 'DET-5', weight: 1.0, text: 'AI is applied to email, phishing and web defence, tuned for healthcare-targeted lures and impersonation.', help: 'Includes business email compromise attempts against finance and procurement.', remedy: 'Tune AI-based email defence for healthcare-specific lures and executive impersonation.' },
-        { id: 'DET-6', weight: 1.0, text: 'Monitoring coverage is continuous, with AI augmenting analyst capacity and documented handover for out-of-hours.', help: '24×7 coverage achieved without relying on AI as an unsupervised replacement.', remedy: 'Use AI triage to extend out-of-hours monitoring while keeping documented analyst handover.' }
-      ]
-    },
-    {
-      id: 'RES',
-      name: 'AI-Assisted Response & Automation',
-      weight: 12,
-      description: 'Automated and AI-supported containment, investigation and recovery — with clinical-safety guardrails.',
-      questions: [
-        { id: 'RES-1', weight: 1.5, text: 'Response playbooks are automated (SOAR or equivalent) with AI-suggested or AI-executed containment steps.', help: 'Count only playbooks actually running in production.', remedy: 'Automate the highest-volume response playbooks and add AI-suggested containment steps.' },
-        { id: 'RES-2', weight: 1.0, text: 'Incident enrichment and case summarisation are automated (timelines, natural-language summaries, similar-incident lookup).', help: 'Reduces manual write-up effort and speeds escalation.', remedy: 'Automate incident enrichment and case summarisation to cut manual write-up time.' },
-        { id: 'RES-3', weight: 1.5, text: 'Safety controls constrain automated action on clinical systems: approval gates, blast-radius limits and rollback.', help: 'An automated isolation of a clinical workstation must never risk patient care unchecked.', remedy: 'Add approval gates, blast-radius limits and tested rollback for automated actions on clinical systems.' },
-        { id: 'RES-4', weight: 1.0, text: 'AI supports post-incident analysis: root cause, control gap identification and lessons-learned tracking.', help: 'Outputs reviewed by humans and tracked to closure.', remedy: 'Use AI-assisted post-incident analysis and track resulting control gaps to closure.' },
-        { id: 'RES-5', weight: 1.0, text: 'AI and automation are exercised in incident simulations, tabletops and clinical downtime drills.', help: 'Includes testing what happens when the AI capability itself is unavailable or wrong.', remedy: 'Include AI/automation failure scenarios in incident exercises and clinical downtime drills.' },
-        { id: 'RES-6', weight: 1.0, text: 'Improvement in detection and response times attributable to AI/automation is measured and reported.', help: 'Before/after MTTD and MTTR with a stated method.', remedy: 'Measure and report MTTD/MTTR change attributable to AI and automation.' }
-      ]
-    },
-    {
-      id: 'IAM',
-      name: 'Identity, Access & Insider Risk Analytics',
-      weight: 8,
-      description: 'Analytics applied to identity behaviour, privileged access and inappropriate access to patient records.',
-      questions: [
-        { id: 'IAM-1', weight: 1.0, text: 'Risk-based or adaptive authentication uses behavioural signals for clinical, remote and privileged access.', help: 'Step-up authentication driven by risk score rather than static rules only.', remedy: 'Enable risk-based adaptive authentication for remote, privileged and clinical access paths.' },
-        { id: 'IAM-2', weight: 1.5, text: 'Analytics detect inappropriate access to patient records and privileged account misuse (e.g. record snooping, VIP access).', help: 'A signature health-sector use case for AI-driven monitoring.', remedy: 'Deploy patient-record access analytics to detect snooping and privileged misuse patterns.' },
-        { id: 'IAM-3', weight: 1.0, text: 'Entitlement analytics support access reviews by flagging excessive, dormant or anomalous privileges.', help: 'Reviewers receive risk-ranked suggestions instead of raw lists.', remedy: 'Add entitlement analytics to access reviews so reviewers see risk-ranked recommendations.' },
-        { id: 'IAM-4', weight: 1.0, text: 'An insider-risk process defines thresholds, privacy safeguards and joint handling with HR and legal.', help: 'Protects staff privacy while enabling investigation.', remedy: 'Formalise insider-risk thresholds, privacy safeguards and joint HR/legal handling.' }
-      ]
-    },
-    {
-      id: 'VUL',
-      name: 'Vulnerability, Exposure & Threat Intelligence',
-      weight: 8,
-      description: 'AI-assisted prioritisation of exposure and intelligence-led defence.',
-      questions: [
-        { id: 'VUL-1', weight: 1.5, text: 'Vulnerability prioritisation uses exploitability, exposure and clinical criticality rather than CVSS alone.', help: 'Machine-assisted ranking that reflects patient-care impact.', remedy: 'Adopt risk-based vulnerability prioritisation combining exploit intelligence with clinical criticality.' },
-        { id: 'VUL-2', weight: 1.0, text: 'External attack surface discovery and exposure monitoring run continuously with automated analysis.', help: 'Includes forgotten portals, telehealth endpoints and third-party hosted services.', remedy: 'Run continuous external attack surface discovery with automated triage of new exposures.' },
-        { id: 'VUL-3', weight: 1.0, text: 'Threat intelligence relevant to the health sector is ingested, correlated and scored automatically.', help: 'Feeds mapped to the entity estate rather than read as reports.', remedy: 'Automate ingestion and correlation of health-sector threat intelligence against the asset estate.' },
-        { id: 'VUL-4', weight: 1.0, text: 'AI-assisted review supports secure development and configuration (code scanning, IaC checks, misconfiguration detection).', help: 'Relevant to in-house development and cloud platform teams.', remedy: 'Introduce AI-assisted code and configuration review in the delivery pipeline.' },
-        { id: 'VUL-5', weight: 1.0, text: 'Adversary emulation and red teaming include AI-assisted attack techniques and validate AI-based detections.', help: 'Tests whether analytics catch novel or AI-generated attack patterns.', remedy: 'Extend red team scenarios to AI-assisted attack techniques and validate analytics coverage.' }
-      ]
-    },
-    {
-      id: 'SEC',
-      name: 'Securing AI Itself (AI Attack Surface)',
+      id: 'B',
+      title: 'Knowing which AI tools you have',
       weight: 10,
-      description: 'Protecting the entity’s own AI systems — including clinical and administrative AI — from misuse and compromise.',
+      intro: 'You cannot secure AI you do not know about. These questions are about visibility.',
+      refs: [
+        { key: 'AIRMF', cite: 'MAP function' },
+        { key: 'ISO42001', cite: 'Annex A.4 resources, A.6 life cycle' },
+        { key: 'OWASP', cite: 'LLM03:2025 Supply Chain' }
+      ],
       questions: [
-        { id: 'SEC-1', weight: 1.5, text: 'All AI/GenAI tools in use are inventoried and approved, with active discovery of unsanctioned "shadow AI".', help: 'Includes staff use of public chatbots with patient or operational data.', remedy: 'Inventory approved AI tools and run discovery for unsanctioned AI use involving sensitive data.' },
-        { id: 'SEC-2', weight: 1.5, text: 'Controls address prompt injection, sensitive-data leakage and unsafe output for deployed AI/LLM systems.', help: 'Input/output filtering, retrieval scoping, tenancy isolation.', remedy: 'Implement input/output guardrails and data-leakage controls for deployed AI and LLM systems.' },
-        { id: 'SEC-3', weight: 1.0, text: 'Model and AI supply-chain integrity is managed (model provenance, dataset lineage, MLOps pipeline security).', help: 'Signed artefacts, trusted registries, dependency scanning.', remedy: 'Establish provenance and integrity controls for models, datasets and MLOps pipelines.' },
-        { id: 'SEC-4', weight: 1.0, text: 'Adversarial robustness testing or AI red teaming is performed before go-live and periodically thereafter.', help: 'Includes evasion, poisoning and jailbreak testing proportional to risk.', remedy: 'Add adversarial robustness testing to AI go-live criteria and periodic assurance.' },
-        { id: 'SEC-5', weight: 1.0, text: 'AI system usage is logged and monitored (prompts, outputs, access) to a standard that supports investigation.', help: 'Logs retained and reachable by the security team.', remedy: 'Route AI system usage logs into security monitoring with investigation-grade retention.' },
-        { id: 'SEC-6', weight: 1.0, text: 'Incident response procedures explicitly cover AI failure, misuse, model compromise and harmful output.', help: 'Named playbooks, not a general IT incident process.', remedy: 'Write AI-specific incident playbooks covering misuse, model compromise and harmful output.' }
+        {
+          id: 'B1', type: 'yesno', weight: 1.5,
+          text: 'Do you keep a list of the AI tools used across your organisation?',
+          hint: 'Include AI features built into software you already own, not only standalone AI products.',
+          refs: [{ key: 'AIRMF', cite: 'MAP' }, { key: 'ISO42001', cite: 'A.4' }],
+          remedy: 'Create a single register of AI tools in use, including AI features inside existing software.'
+        },
+        {
+          id: 'B2', type: 'choice', weight: 1.5,
+          text: 'How up to date is that list?',
+          options: [
+            { value: 'none', label: 'There is no list', score: 0 },
+            { value: 'stale', label: 'More than a year old', score: 1 },
+            { value: 'annual', label: 'Reviewed once a year', score: 2 },
+            { value: 'quarterly', label: 'Reviewed every three months', score: 4 },
+            { value: 'auto', label: 'Updated automatically or continuously', score: 5 }
+          ],
+          refs: [{ key: 'AIRMF', cite: 'MAP' }],
+          remedy: 'Review the AI register at least quarterly, ideally feeding it from automated discovery.'
+        },
+        {
+          id: 'B3', type: 'choice', weight: 1.0,
+          text: 'Roughly what share of the AI tools in use were formally approved before being used?',
+          options: [
+            { value: 'none', label: 'None, or we do not know', score: 0 },
+            { value: 'few', label: 'A few', score: 1 },
+            { value: 'half', label: 'About half', score: 2 },
+            { value: 'most', label: 'Most', score: 4 },
+            { value: 'all', label: 'All of them', score: 5 }
+          ],
+          refs: [{ key: 'ISO42001', cite: 'A.6' }, { key: 'SECAI', cite: 'Secure deployment' }],
+          remedy: 'Route all AI tools through an approval step and retrospectively review those already in use.'
+        },
+        {
+          id: 'B4', type: 'yesno', weight: 1.5,
+          text: 'Are you able to detect staff using AI tools that have not been approved?',
+          hint: 'Sometimes called "shadow AI" — for example someone pasting work into a personal chatbot account.',
+          refs: [{ key: 'GENAI', cite: 'Shadow AI' }, { key: 'CSF', cite: 'DETECT' }],
+          remedy: 'Enable monitoring of web and cloud traffic to detect use of unapproved AI services.'
+        },
+        {
+          id: 'B5', type: 'number', informational: true,
+          text: 'Roughly how many AI tools or AI features are in use in your organisation today?',
+          hint: 'An estimate is fine. Enter 0 if none.',
+          unit: 'tools',
+          refs: [{ key: 'AIRMF', cite: 'MAP' }]
+        },
+        {
+          id: 'B6', type: 'multi', informational: true,
+          text: 'Where is AI used in your organisation?',
+          hint: 'Tick all that apply. This helps us understand your risk profile, and is not scored.',
+          options: [
+            { value: 'clinical-decision', label: 'Clinical decision support or triage' },
+            { value: 'imaging', label: 'Medical imaging or diagnostics' },
+            { value: 'documentation', label: 'Clinical documentation or note taking' },
+            { value: 'patient-facing', label: 'Patient-facing chatbots or messaging' },
+            { value: 'coding-billing', label: 'Coding, billing or claims' },
+            { value: 'back-office', label: 'Back office: HR, finance or procurement' },
+            { value: 'security', label: 'Cybersecurity or IT operations' },
+            { value: 'research', label: 'Research or analytics' }
+          ],
+          noneLabel: 'AI is not used anywhere yet',
+          refs: [{ key: 'AIRMF', cite: 'MAP' }]
+        }
       ]
     },
+
     {
-      id: 'MED',
-      name: 'Medical Device & Clinical System Protection',
-      weight: 8,
-      description: 'Applying analytics to connected medical devices and clinical technology without disrupting care.',
+      id: 'C',
+      title: 'Protecting patient and staff information',
+      weight: 13,
+      intro: 'These questions are about stopping confidential information leaking through AI tools.',
+      refs: [
+        { key: 'GENAI', cite: 'Data privacy and information leakage' },
+        { key: 'OWASP', cite: 'LLM02:2025 Sensitive Information Disclosure' },
+        { key: 'ISO42001', cite: 'Annex A.7 data for AI' },
+        { key: 'HEALTH', cite: 'HITRUST AI security assessment' }
+      ],
       questions: [
-        { id: 'MED-1', weight: 1.0, text: 'Connected medical and IoMT devices are discovered automatically and risk-scored (passive fingerprinting, no active scanning of sensitive devices).', help: 'Coverage percentage of the known biomedical estate.', remedy: 'Deploy passive IoMT discovery and risk scoring across the biomedical estate.' },
-        { id: 'MED-2', weight: 1.5, text: 'Behavioural baselining and anomaly detection are applied to medical device network traffic.', help: 'Detects devices deviating from expected clinical communication patterns.', remedy: 'Baseline medical device traffic and alert on deviation from expected clinical behaviour.' },
-        { id: 'MED-3', weight: 1.0, text: 'Segmentation policy for clinical devices is informed by traffic analytics and enforced, not just designed.', help: 'Analytics-derived policy that is actually applied on the network.', remedy: 'Use traffic analytics to derive and then enforce clinical device segmentation policy.' },
-        { id: 'MED-4', weight: 1.5, text: 'Clinical safety impact is assessed before any AI-driven or automated security action can affect a medical device.', help: 'Joint sign-off with biomedical engineering and clinical leadership.', remedy: 'Require biomedical and clinical sign-off for automated security actions on medical devices.' },
-        { id: 'MED-5', weight: 1.0, text: 'Compensating controls are tracked for legacy or unpatchable devices, with monitoring intensity raised accordingly.', help: 'A living register rather than a one-time exception list.', remedy: 'Maintain a live register of unpatchable devices with compensating controls and heightened monitoring.' }
+        {
+          id: 'C1', type: 'yesno', weight: 1.5,
+          text: 'Have staff been told in writing what information must never be typed or uploaded into a public AI tool?',
+          hint: 'For example patient records, staff records, contracts or passwords.',
+          refs: [{ key: 'GENAI', cite: 'Data leakage' }, { key: 'OWASP', cite: 'LLM02:2025' }],
+          remedy: 'Issue clear written guidance on what may never be entered into a public AI tool, and remind staff regularly.'
+        },
+        {
+          id: 'C2', type: 'choice', weight: 1.5, allowNA: true,
+          text: 'Where AI tools handle patient information, how is that information protected before it reaches the tool?',
+          options: [
+            { value: 'none', label: 'It is not protected', score: 0 },
+            { value: 'case', label: 'Decided case by case', score: 1 },
+            { value: 'some', label: 'Identifying details are removed for some tools', score: 2 },
+            { value: 'all', label: 'Identifying details are removed or masked for all such tools', score: 4 },
+            { value: 'automatic', label: 'Automatic controls block sensitive information from being sent', score: 5 }
+          ],
+          refs: [{ key: 'ISO42001', cite: 'A.7' }, { key: 'HEALTH', cite: 'Patient data minimisation' }],
+          remedy: 'Remove or mask identifying details before patient information reaches an AI tool, and automate the check where possible.'
+        },
+        {
+          id: 'C3', type: 'yesno', weight: 1.5, allowNA: true,
+          text: 'Do your contracts stop AI suppliers from using your data to train their models?',
+          refs: [{ key: 'ISO42001', cite: 'A.10 third parties' }, { key: 'OWASP', cite: 'LLM03:2025' }],
+          remedy: 'Add a clause to AI supplier contracts prohibiting training on your data, and confirm the setting is enforced in the product.'
+        },
+        {
+          id: 'C4', type: 'yesno', weight: 1.0, allowNA: true,
+          text: 'Do you know which countries your AI suppliers store and process your data in?',
+          refs: [{ key: 'ISO42001', cite: 'A.10' }, { key: 'AIACT', cite: 'Data governance' }],
+          remedy: 'Record the processing locations for each AI supplier and check them against your data residency rules.'
+        },
+        {
+          id: 'C5', type: 'multi', weight: 1.0,
+          text: 'Which of these controls are in place to stop sensitive information leaving through AI tools?',
+          hint: 'Tick everything that is actually switched on today.',
+          options: [
+            { value: 'dlp', label: 'Data loss prevention checks on web and AI traffic', points: 1 },
+            { value: 'blocked', label: 'Public AI websites are blocked or restricted', points: 1 },
+            { value: 'tenancy', label: 'Enterprise AI accounts configured not to train on your data', points: 1 },
+            { value: 'gateway', label: 'A single approved AI gateway that staff must use', points: 1 },
+            { value: 'logging', label: 'Records kept of what is sent to AI tools', points: 1 }
+          ],
+          noneLabel: 'None of these are in place',
+          refs: [{ key: 'OWASP', cite: 'LLM02:2025' }, { key: 'CSF', cite: 'PROTECT' }],
+          remedy: 'Add technical controls so sensitive information cannot leave through AI tools, starting with blocking unapproved services and enabling data loss prevention.'
+        },
+        {
+          id: 'C6', type: 'yesno', weight: 1.0, allowNA: true,
+          text: 'Has a privacy impact assessment been completed for AI tools that handle patient information?',
+          hint: 'A DPIA, PIA or your local equivalent.',
+          refs: [{ key: 'ISO42001', cite: 'A.5' }, { key: 'AIACT', cite: 'Art. 27 impact assessment' }],
+          remedy: 'Complete a privacy impact assessment for each AI tool that handles patient information.'
+        }
       ]
     },
+
     {
-      id: 'PPL',
-      name: 'People, Skills & Third-Party Ecosystem',
-      weight: 8,
-      description: 'Capability of the workforce and assurance over suppliers delivering AI-enabled security.',
+      id: 'D',
+      title: 'Safe use of chatbots and generative AI',
+      weight: 13,
+      intro: 'These questions cover the specific risks of chatbots and other generative AI tools.',
+      refs: [
+        { key: 'OWASP', cite: 'LLM01, LLM05, LLM06, LLM08, LLM09:2025' },
+        { key: 'GENAI', cite: 'Generative AI Profile' },
+        { key: 'AIACT', cite: 'Art. 14 human oversight' }
+      ],
       questions: [
-        { id: 'PPL-1', weight: 1.0, text: 'Security team skills in AI/ML and data analysis are assessed against a defined capability model with a training plan.', help: 'Named skills matrix and funded development plan.', remedy: 'Assess security team AI/data skills against a capability model and fund the resulting training plan.' },
-        { id: 'PPL-2', weight: 1.0, text: 'Analysts routinely use AI assistants in their workflow and their feedback drives improvement.', help: 'Adoption measured, not just licensed.', remedy: 'Drive analyst adoption of AI assistants and capture structured feedback for tuning.' },
-        { id: 'PPL-3', weight: 1.5, text: 'Clinical and administrative staff receive awareness training on safe AI use and AI-enabled social engineering (deepfake voice, video, synthetic identity).', help: 'Health-sector fraud increasingly uses synthetic media.', remedy: 'Add safe-AI-use and deepfake social engineering content to workforce awareness training.' },
-        { id: 'PPL-4', weight: 1.0, text: 'Contracts and assurance requirements cover AI features in third-party and outsourced security services.', help: 'Data location, model training on entity data, transparency and exit terms.', remedy: 'Add AI-specific clauses and assurance evidence requirements to security supplier contracts.' },
-        { id: 'PPL-5', weight: 1.0, text: 'The entity participates in sector-level sharing of AI threat and practice information with the governing body and peers.', help: 'Two-way contribution, not passive receipt.', remedy: 'Join and actively contribute to the sector AI threat and practice sharing forum.' }
+        {
+          id: 'D1', type: 'yesno', weight: 1.5, allowNA: true,
+          text: 'Is AI output checked by a suitably qualified person before it affects a patient, a payment, or a change to a system?',
+          hint: 'This is about a required check, not an optional one.',
+          refs: [{ key: 'OWASP', cite: 'LLM05, LLM09:2025' }, { key: 'AIACT', cite: 'Art. 14' }],
+          remedy: 'Require a qualified person to review AI output before it affects a patient, a payment or a system change.'
+        },
+        {
+          id: 'D2', type: 'choice', weight: 1.5, allowNA: true,
+          text: 'Can your AI tools take actions by themselves, such as sending email, changing records or running commands?',
+          options: [
+            { value: 'unrestricted', label: 'Yes, with no restrictions', score: 0 },
+            { value: 'few-limits', label: 'Yes, with few restrictions', score: 1 },
+            { value: 'per-approval', label: 'Yes, but a person approves each action', score: 3 },
+            { value: 'suggest-only', label: 'No, they only suggest and a person carries it out', score: 4 },
+            { value: 'blocked', label: 'No, and this is enforced technically', score: 5 }
+          ],
+          refs: [{ key: 'OWASP', cite: 'LLM06:2025 Excessive Agency' }],
+          remedy: 'Restrict what AI tools may do on their own, and require human approval for any action that changes data or systems.'
+        },
+        {
+          id: 'D3', type: 'yesno', weight: 1.5, allowNA: true,
+          text: 'Are your AI tools protected against hidden instructions in documents, emails or web pages that try to hijack them?',
+          hint: 'Known as prompt injection: text hidden in a file or message that tells the AI to ignore its rules.',
+          refs: [{ key: 'OWASP', cite: 'LLM01:2025 Prompt Injection' }, { key: 'ATLAS', cite: 'Prompt injection techniques' }],
+          remedy: 'Add input and output filtering for AI tools that read untrusted content, and test them against prompt injection.'
+        },
+        {
+          id: 'D4', type: 'yesno', weight: 1.0, allowNA: true,
+          text: 'Where an AI assistant searches your internal documents, is it limited to only what that user is already allowed to see?',
+          refs: [{ key: 'OWASP', cite: 'LLM08:2025 Vector and Embedding Weaknesses' }, { key: 'CSF', cite: 'PROTECT' }],
+          remedy: 'Enforce the user\u2019s existing permissions on anything an AI assistant can retrieve.'
+        },
+        {
+          id: 'D5', type: 'yesno', weight: 1.0, allowNA: true,
+          text: 'Do you keep records of what staff ask AI tools and what the tools answered?',
+          hint: 'Needed to investigate a data leak or a harmful answer after the fact.',
+          refs: [{ key: 'GENAI', cite: 'Monitoring and logging' }, { key: 'CSF', cite: 'DETECT' }],
+          remedy: 'Enable logging of AI prompts and responses, and make the logs available to the security team.'
+        },
+        {
+          id: 'D6', type: 'choice', weight: 1.0, allowNA: true,
+          text: 'Are people told when content they receive was generated or drafted by AI?',
+          options: [
+            { value: 'no', label: 'No', score: 0 },
+            { value: 'sometimes', label: 'Sometimes, informally', score: 1 },
+            { value: 'clinical', label: 'Yes, for clinical content', score: 3 },
+            { value: 'all', label: 'Yes, for all AI-generated content', score: 5 }
+          ],
+          refs: [{ key: 'AIACT', cite: 'Art. 50 transparency' }, { key: 'AIRMF', cite: 'MEASURE' }],
+          remedy: 'Label AI-generated content so staff and patients know when AI was involved.'
+        }
+      ]
+    },
+
+    {
+      id: 'E',
+      title: 'Buying AI safely',
+      weight: 9,
+      intro: 'Most AI risk arrives through a supplier. These questions are about what you ask for before you buy.',
+      refs: [
+        { key: 'SECAI', cite: 'Secure design and secure deployment' },
+        { key: 'OWASP', cite: 'LLM03:2025 Supply Chain' },
+        { key: 'ISO42001', cite: 'Annex A.10 third-party relationships' }
+      ],
+      questions: [
+        {
+          id: 'E1', type: 'yesno', weight: 1.5,
+          text: 'Do you ask AI suppliers security questions before buying or switching on their product?',
+          refs: [{ key: 'SECAI', cite: 'Secure design' }, { key: 'ISO42001', cite: 'A.10' }],
+          remedy: 'Add an AI-specific security questionnaire to the procurement process.'
+        },
+        {
+          id: 'E2', type: 'multi', weight: 1.5,
+          text: 'Which of these do you require from AI suppliers in writing?',
+          hint: 'Tick everything your contracts or procurement rules actually require.',
+          options: [
+            { value: 'certification', label: 'A recognised security certification, for example ISO 27001 or ISO 42001', points: 1 },
+            { value: 'testing', label: 'Evidence that the AI has been security tested independently', points: 1 },
+            { value: 'breach', label: 'Prompt notification if the supplier suffers a breach', points: 1 },
+            { value: 'no-training', label: 'A clause preventing them training on your data', points: 1 },
+            { value: 'exit', label: 'Deletion or return of your data when the contract ends', points: 1 }
+          ],
+          noneLabel: 'None of these are required',
+          refs: [{ key: 'OWASP', cite: 'LLM03:2025' }, { key: 'ISO42001', cite: 'A.10' }],
+          remedy: 'Standardise AI supplier requirements covering certification, independent testing, breach notice, no-training clauses and data deletion on exit.'
+        },
+        {
+          id: 'E3', type: 'yesno', weight: 1.0,
+          text: 'Do you know which AI features are already switched on inside software you have bought?',
+          hint: 'For example AI features in your electronic health record, email, or document tools.',
+          refs: [{ key: 'AIRMF', cite: 'MAP' }, { key: 'OWASP', cite: 'LLM03:2025' }],
+          remedy: 'Review existing software for AI features that are already enabled and bring them into the AI register.'
+        },
+        {
+          id: 'E4', type: 'choice', weight: 1.0,
+          text: 'How do you handle AI features that a supplier switches on automatically?',
+          options: [
+            { value: 'unaware', label: 'We would not know', score: 0 },
+            { value: 'after', label: 'We find out afterwards', score: 1 },
+            { value: 'notified', label: 'We review them when the supplier tells us', score: 3 },
+            { value: 'contract', label: 'Our contract requires notice and our approval', score: 4 },
+            { value: 'default-off', label: 'New AI features stay switched off until we approve them', score: 5 }
+          ],
+          refs: [{ key: 'SECAI', cite: 'Secure operation and maintenance' }],
+          remedy: 'Require suppliers to give notice before enabling AI features, and keep new features off until reviewed.'
+        }
+      ]
+    },
+
+    {
+      id: 'F',
+      title: 'Using AI to defend the organisation',
+      weight: 12,
+      intro: 'These questions are about AI working in your favour: helping detect and respond to attacks.',
+      refs: [
+        { key: 'CSF', cite: 'DETECT and RESPOND functions' },
+        { key: 'HEALTH', cite: 'HHS 405(d) HICP' }
+      ],
+      questions: [
+        {
+          id: 'F1', type: 'yesno', weight: 1.5,
+          text: 'Does your security monitoring use AI or behaviour analytics to spot unusual activity?',
+          hint: 'For example alerting when an account behaves unlike its normal pattern.',
+          refs: [{ key: 'CSF', cite: 'DETECT' }],
+          remedy: 'Deploy behaviour analytics in security monitoring rather than relying on fixed rules alone.'
+        },
+        {
+          id: 'F2', type: 'choice', weight: 1.5,
+          text: 'How much of your environment does that monitoring cover?',
+          options: [
+            { value: 'none', label: 'None of it', score: 0 },
+            { value: 'few', label: 'A few systems', score: 1 },
+            { value: 'it', label: 'Most IT systems', score: 3 },
+            { value: 'clinical', label: 'IT and clinical systems', score: 4 },
+            { value: 'devices', label: 'IT, clinical systems and connected medical devices', score: 5 }
+          ],
+          refs: [{ key: 'CSF', cite: 'DETECT' }, { key: 'HEALTH', cite: 'Clinical system coverage' }],
+          remedy: 'Extend monitoring coverage to clinical systems and connected medical devices.'
+        },
+        {
+          id: 'F3', type: 'yesno', weight: 1.0,
+          text: 'Do you use AI to help sort and prioritise security alerts, so the team sees the important ones first?',
+          refs: [{ key: 'CSF', cite: 'DETECT' }],
+          remedy: 'Use AI-assisted triage to rank security alerts by risk and cut the queue reaching analysts.'
+        },
+        {
+          id: 'F4', type: 'yesno', weight: 1.0,
+          text: 'Are any security responses automated, such as isolating a device that appears infected?',
+          refs: [{ key: 'CSF', cite: 'RESPOND' }],
+          remedy: 'Automate the highest-volume response steps, starting with containment of clearly compromised devices.'
+        },
+        {
+          id: 'F5', type: 'yesno', weight: 1.5, allowNA: true,
+          text: 'Is there a firm rule that an automated security action must never disrupt patient care without a human decision?',
+          hint: 'For example a rule that clinical workstations and medical devices are never isolated automatically.',
+          refs: [{ key: 'HEALTH', cite: 'Clinical safety' }, { key: 'AIACT', cite: 'Art. 14' }],
+          remedy: 'Write and enforce a rule that automated action affecting patient care always requires a human decision.'
+        },
+        {
+          id: 'F6', type: 'yesno', weight: 1.0,
+          text: 'Does your email security use AI to catch AI-written phishing and impersonation?',
+          refs: [{ key: 'CSF', cite: 'PROTECT, DETECT' }, { key: 'GENAI', cite: 'AI-enabled social engineering' }],
+          remedy: 'Enable AI-based email defence tuned for impersonation and AI-written phishing.'
+        }
+      ]
+    },
+
+    {
+      id: 'G',
+      title: 'Testing and checking AI',
+      weight: 9,
+      intro: 'These questions are about proving your AI tools behave safely, rather than assuming they do.',
+      refs: [
+        { key: 'AIRMF', cite: 'MEASURE function' },
+        { key: 'ATLAS', cite: 'Adversarial testing' },
+        { key: 'AIACT', cite: 'Art. 15 accuracy, robustness and cybersecurity' }
+      ],
+      questions: [
+        {
+          id: 'G1', type: 'choice', weight: 1.5,
+          text: 'How often are AI tools tested for security weaknesses, including deliberate attempts to trick them?',
+          options: [
+            { value: 'never', label: 'Never', score: 0 },
+            { value: 'once', label: 'Once, before purchase', score: 1 },
+            { value: 'annual', label: 'Once a year', score: 3 },
+            { value: 'change', label: 'After every significant change', score: 4 },
+            { value: 'continuous', label: 'Continuously', score: 5 }
+          ],
+          refs: [{ key: 'AIRMF', cite: 'MEASURE' }, { key: 'AIACT', cite: 'Art. 15' }],
+          remedy: 'Test AI tools for security weaknesses at least annually and after every significant change.'
+        },
+        {
+          id: 'G2', type: 'yesno', weight: 1.5, allowNA: true,
+          text: 'Has anyone deliberately tried to break or trick your AI tools to see what happens?',
+          hint: 'Sometimes called AI red teaming. Internal testing counts.',
+          refs: [{ key: 'ATLAS', cite: 'Adversary emulation' }, { key: 'SECAI', cite: 'Secure development' }],
+          remedy: 'Run AI red teaming against your highest-risk AI tools and fix what it finds.'
+        },
+        {
+          id: 'G3', type: 'yesno', weight: 1.0, allowNA: true,
+          text: 'Do you measure how often AI tools give wrong, misleading or unsafe answers?',
+          refs: [{ key: 'AIRMF', cite: 'MEASURE' }, { key: 'OWASP', cite: 'LLM09:2025 Misinformation' }],
+          remedy: 'Sample AI output regularly and record an error rate so quality can be tracked over time.'
+        },
+        {
+          id: 'G4', type: 'yesno', weight: 1.0,
+          text: 'Are AI tools included in your normal internal audit or assurance programme?',
+          refs: [{ key: 'ISO42001', cite: 'Internal audit' }, { key: 'AIRMF', cite: 'MEASURE' }],
+          remedy: 'Add AI tools to the internal audit plan so assurance does not depend on the project team alone.'
+        }
+      ]
+    },
+
+    {
+      id: 'H',
+      title: 'When AI goes wrong',
+      weight: 9,
+      intro: 'These questions are about being ready for an AI problem before it happens.',
+      refs: [
+        { key: 'AIRMF', cite: 'MANAGE function' },
+        { key: 'CSF', cite: 'RESPOND and RECOVER functions' }
+      ],
+      questions: [
+        {
+          id: 'H1', type: 'yesno', weight: 1.5,
+          text: 'Do staff know how to report a problem caused by an AI tool, and who to report it to?',
+          refs: [{ key: 'AIRMF', cite: 'MANAGE' }, { key: 'CSF', cite: 'RESPOND' }],
+          remedy: 'Publish a simple route for staff to report AI problems and make sure it reaches the security team.'
+        },
+        {
+          id: 'H2', type: 'yesno', weight: 1.5,
+          text: 'Does your incident response plan specifically cover AI problems?',
+          hint: 'For example wrong output that reached a patient, information leaked through an AI tool, or misuse of an AI account.',
+          refs: [{ key: 'AIRMF', cite: 'MANAGE' }, { key: 'CSF', cite: 'RESPOND' }],
+          remedy: 'Add AI-specific scenarios and steps to the incident response plan.'
+        },
+        {
+          id: 'H3', type: 'yesno', weight: 1.5,
+          text: 'Could you switch off or withdraw an AI tool quickly if it started causing harm?',
+          hint: 'Answer Yes only if you know who can do it and how long it would take.',
+          refs: [{ key: 'AIRMF', cite: 'MANAGE — ability to disengage an AI system' }, { key: 'AIACT', cite: 'Art. 14' }],
+          remedy: 'Document and test how each AI tool can be disabled quickly, and who is authorised to do it.'
+        },
+        {
+          id: 'H4', type: 'choice', weight: 1.0,
+          text: 'Have you practised an AI-related incident?',
+          options: [
+            { value: 'never', label: 'Never', score: 0 },
+            { value: 'informal', label: 'Discussed it informally', score: 1 },
+            { value: 'once', label: 'Ran one tabletop exercise', score: 3 },
+            { value: 'annual', label: 'Run a tabletop exercise every year', score: 4 },
+            { value: 'clinical', label: 'Run a full exercise including clinical teams', score: 5 }
+          ],
+          refs: [{ key: 'CSF', cite: 'RESPOND' }, { key: 'HEALTH', cite: 'Clinical continuity exercises' }],
+          remedy: 'Run an AI incident tabletop exercise, and involve clinical teams where AI touches care.'
+        },
+        {
+          id: 'H5', type: 'number', informational: true,
+          text: 'How many AI-related incidents or near misses have you recorded in the last 12 months?',
+          hint: 'Enter 0 if none. A higher number is not necessarily worse — it often means better reporting.',
+          unit: 'incidents',
+          refs: [{ key: 'AIRMF', cite: 'MANAGE' }]
+        }
+      ]
+    },
+
+    {
+      id: 'I',
+      title: 'People and awareness',
+      weight: 7,
+      intro: 'These questions are about whether your staff know what safe AI use looks like.',
+      refs: [
+        { key: 'ISO42001', cite: 'Annex A.3 and A.4 competence' },
+        { key: 'HEALTH', cite: 'HHS 405(d) HICP workforce practices' }
+      ],
+      questions: [
+        {
+          id: 'I1', type: 'choice', weight: 1.5,
+          text: 'What share of your staff have received training on safe use of AI?',
+          options: [
+            { value: 'none', label: 'None', score: 0 },
+            { value: 'few', label: 'A few teams', score: 1 },
+            { value: 'most', label: 'Most clinical and administrative staff', score: 3 },
+            { value: 'all', label: 'All staff', score: 4 },
+            { value: 'refresh', label: 'All staff, with a yearly refresher', score: 5 }
+          ],
+          refs: [{ key: 'ISO42001', cite: 'A.4' }],
+          remedy: 'Roll out safe-AI-use training to all staff and add a yearly refresher.'
+        },
+        {
+          id: 'I2', type: 'yesno', weight: 1.5,
+          text: 'Does your awareness training cover AI-enabled scams, such as deepfake voice or video calls and AI-written phishing?',
+          refs: [{ key: 'GENAI', cite: 'Synthetic media' }, { key: 'HEALTH', cite: 'HICP social engineering' }],
+          remedy: 'Add deepfake and AI-written phishing content to awareness training, including a verification procedure for unusual requests.'
+        },
+        {
+          id: 'I3', type: 'yesno', weight: 1.0,
+          text: 'Does your security or IT team include someone with AI or data skills?',
+          refs: [{ key: 'ISO42001', cite: 'A.4' }, { key: 'AIRMF', cite: 'GOVERN' }],
+          remedy: 'Build or buy AI and data skills within the security team, and record it in the resourcing plan.'
+        },
+        {
+          id: 'I4', type: 'yesno', weight: 1.0,
+          text: 'Is there an easy way for staff to ask whether a particular AI tool is allowed?',
+          hint: 'For example a mailbox, a form or a named contact.',
+          refs: [{ key: 'ISO42001', cite: 'A.9 use of AI systems' }],
+          remedy: 'Publish a single, easy route for staff to check whether an AI tool is permitted.'
+        }
+      ]
+    },
+
+    {
+      id: 'J',
+      title: 'Clinical AI and connected devices',
+      weight: 7,
+      intro: 'These questions only concern AI that touches patient care or medical equipment. Choose "Not applicable" where it does not apply to you.',
+      refs: [
+        { key: 'HEALTH', cite: 'HITRUST AI security assessment, medical device practice' },
+        { key: 'CSF', cite: 'IDENTIFY and PROTECT functions' },
+        { key: 'AIACT', cite: 'High-risk AI in health' }
+      ],
+      questions: [
+        {
+          id: 'J1', type: 'yesno', informational: true,
+          text: 'Is AI used in direct clinical care in your organisation?',
+          hint: 'For example diagnosis support, triage or medical imaging. This answer is context only.',
+          refs: [{ key: 'HEALTH', cite: 'Clinical AI use' }]
+        },
+        {
+          id: 'J2', type: 'yesno', weight: 1.5, allowNA: true,
+          text: 'Where AI supports clinical decisions, is a named clinician always responsible for the final decision?',
+          refs: [{ key: 'AIACT', cite: 'Art. 14' }, { key: 'HEALTH', cite: 'Clinical accountability' }],
+          remedy: 'Record that a named clinician holds the final decision wherever AI supports clinical judgement.'
+        },
+        {
+          id: 'J3', type: 'choice', weight: 1.5, allowNA: true,
+          text: 'Are AI-enabled medical devices included in your device inventory and risk assessments?',
+          options: [
+            { value: 'none', label: 'We do not have a device inventory', score: 0 },
+            { value: 'partly', label: 'Partly', score: 1 },
+            { value: 'most', label: 'Most devices', score: 3 },
+            { value: 'all', label: 'All devices', score: 4 },
+            { value: 'monitored', label: 'All devices, with continuous monitoring', score: 5 }
+          ],
+          refs: [{ key: 'CSF', cite: 'IDENTIFY' }, { key: 'HEALTH', cite: 'Medical device inventory' }],
+          remedy: 'Bring AI-enabled medical devices into the device inventory and risk assessment process.'
+        },
+        {
+          id: 'J4', type: 'yesno', weight: 1.0, allowNA: true,
+          text: 'Do your clinical engineering and security teams jointly review AI-related updates to medical devices?',
+          refs: [{ key: 'HEALTH', cite: 'Biomedical and security co-ordination' }, { key: 'SECAI', cite: 'Secure operation and maintenance' }],
+          remedy: 'Set up a joint clinical engineering and security review for AI-related medical device updates.'
+        },
+        {
+          id: 'J5', type: 'yesno', weight: 1.0, allowNA: true,
+          text: 'Is there a documented fallback if a clinical AI tool becomes unavailable or unreliable?',
+          hint: 'What clinicians do instead, and who tells them to switch.',
+          refs: [{ key: 'CSF', cite: 'RECOVER' }, { key: 'HEALTH', cite: 'Clinical downtime procedures' }],
+          remedy: 'Document and communicate the clinical fallback for each AI tool used in care.'
+        }
       ]
     }
+  ];
+
+  /* ------------------------------------------------------------------ *
+   * Respondent details collected before the questions
+   * ------------------------------------------------------------------ */
+
+  AIMA.respondentFields = [
+    { id: 'contactName', label: 'Your name', type: 'text', required: true },
+    { id: 'contactRole', label: 'Your job title', type: 'text', required: true },
+    { id: 'contactEmail', label: 'Your work email', type: 'email', required: true },
+    { id: 'contactPhone', label: 'Contact number', type: 'text', required: false },
+    { id: 'approverName', label: 'Name of the senior person who approved this return', type: 'text', required: false }
   ];
 
   /* ------------------------------------------------------------------ *
    * Derived helpers
    * ------------------------------------------------------------------ */
 
-  AIMA.allQuestions = AIMA.domains.reduce(function (acc, domain) {
-    domain.questions.forEach(function (q) {
-      acc.push(Object.assign({}, q, { domainId: domain.id, domainName: domain.name, domainWeight: domain.weight }));
+  function isScored(question) {
+    if (question.informational) return false;
+    if (question.type === 'text') return false;
+    if (question.type === 'number') return !!question.bands;
+    return true;
+  }
+
+  AIMA.isScored = isScored;
+
+  AIMA.allQuestions = AIMA.sections.reduce(function (acc, section) {
+    section.questions.forEach(function (q, index) {
+      acc.push(Object.assign({}, q, {
+        sectionId: section.id,
+        sectionTitle: section.title,
+        sectionWeight: section.weight,
+        indexInSection: index + 1,
+        scored: isScored(q),
+        weight: q.weight || 1
+      }));
     });
     return acc;
   }, []);
 
-  AIMA.questionCount = AIMA.allQuestions.length;
+  // Continuous question numbering, which is what respondents refer to.
+  AIMA.allQuestions.forEach(function (q, i) { q.number = i + 1; });
 
-  AIMA.getDomain = function (id) {
-    return AIMA.domains.filter(function (d) { return d.id === id; })[0] || null;
+  AIMA.questionCount = AIMA.allQuestions.length;
+  AIMA.scoredQuestionCount = AIMA.allQuestions.filter(function (q) { return q.scored; }).length;
+
+  AIMA.getSection = function (id) {
+    return AIMA.sections.filter(function (s) { return s.id === id; })[0] || null;
   };
 
   AIMA.getQuestion = function (id) {
@@ -282,5 +852,19 @@ window.AIMA = window.AIMA || {};
     return AIMA.entities.filter(function (e) { return e.code === code; })[0] || null;
   };
 
-  AIMA.totalDomainWeight = AIMA.domains.reduce(function (sum, d) { return sum + d.weight; }, 0);
+  /** Options a respondent may choose for a question, including N/A where allowed. */
+  AIMA.optionsFor = function (question) {
+    var options;
+    if (question.type === 'yesno') {
+      options = AIMA.yesNoOptions.slice();
+    } else if (question.type === 'choice' || question.type === 'multi') {
+      options = (question.options || []).slice();
+    } else {
+      options = [];
+    }
+    if (question.allowNA) options = options.concat([AIMA.notApplicableOption]);
+    return options;
+  };
+
+  AIMA.totalSectionWeight = AIMA.sections.reduce(function (sum, s) { return sum + s.weight; }, 0);
 })(window.AIMA);

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Cyber Assurance Console</title>
+<meta name="description" content="Restricted console for the governing body: loads returns from member organisations, rates them and reports across the sector." />
+<link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+<div class="classification-bar"><span data-brand="classification">Official — Sensitive</span> · Governing body use only</div>
+
+<header class="site-header no-print">
+  <img class="crest" data-brand-logo alt="" src="assets/brand/logo.svg" />
+  <div class="titles">
+    <div class="org" data-brand="organisation">National Health Authority</div>
+    <h1>AI Cyber Assurance Console</h1>
+    <div class="strap"><span data-brand="directorate"></span> · restricted to the governing body</div>
+  </div>
+  <div class="spacer"></div>
+  <nav class="tabs" role="tablist" aria-label="Console sections">
+    <button type="button" role="tab" id="tab-dashboard" aria-selected="true" data-tab="dashboard">Sector dashboard</button>
+    <button type="button" role="tab" id="tab-entity" aria-selected="false" data-tab="entity">Organisation reports</button>
+    <button type="button" role="tab" id="tab-questions" aria-selected="false" data-tab="questions">Question analysis</button>
+    <button type="button" role="tab" id="tab-data" aria-selected="false" data-tab="data">Returns &amp; exports</button>
+    <button type="button" role="tab" id="tab-method" aria-selected="false" data-tab="method">Method</button>
+  </nav>
+  <div class="header-actions">
+    <button type="button" class="btn btn-primary" id="btnPrint">Export PDF</button>
+  </div>
+</header>
+
+<!-- Letterhead used by every printed report -->
+<div class="report-letterhead" id="printLetterhead">
+  <img class="crest" data-brand-logo alt="" src="assets/brand/logo.svg" />
+  <div class="lh-body">
+    <div class="lh-org" data-brand="organisation"></div>
+    <h1 id="printTitle">AI Cyber Assurance — Sector Report</h1>
+    <div class="lh-sub" id="printSubtitle"></div>
+    <div class="lh-meta" id="printMeta"></div>
+  </div>
+  <div class="lh-ref">
+    <span data-brand="documentRef"></span><br />
+    <span data-brand="cycle"></span>
+  </div>
+</div>
+
+<main class="page">
+
+  <!-- ========================= SECTOR DASHBOARD ========================= -->
+  <div class="view" id="view-dashboard">
+
+    <div id="emptyState" class="card">
+      <div class="callout">
+        <h4>No returns loaded yet</h4>
+        <p>Go to <strong>Returns &amp; exports</strong> and drop in the <code>.json</code> data files that organisations send back with their PDFs. You can load all of them at once.</p>
+        <p class="mb-0">To see how the console behaves before the first return arrives, use <strong>Load demonstration data</strong> on that tab.</p>
+      </div>
+    </div>
+
+    <div id="dashboardBody" hidden>
+      <div class="card no-print">
+        <div class="card-head">
+          <h3>Filters</h3>
+          <div class="spacer"></div>
+          <span class="card-note" id="filterSummary"></span>
+          <button type="button" class="btn btn-sm" id="btnResetFilters">Reset</button>
+        </div>
+        <div class="filters">
+          <div class="field">
+            <label for="filterType">Type of organisation</label>
+            <select id="filterType"><option value="">All types</option></select>
+          </div>
+          <div class="field">
+            <label for="filterRegion">Region</label>
+            <select id="filterRegion"><option value="">All regions</option></select>
+          </div>
+          <div class="field">
+            <label for="filterLevel">Rating</label>
+            <select id="filterLevel"><option value="">All ratings</option></select>
+          </div>
+          <div class="field">
+            <label for="filterSearch">Search</label>
+            <input type="text" id="filterSearch" placeholder="Name or code" />
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title"><h2>Sector overview</h2><span class="hint" id="overviewHint"></span></div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <div class="chart-cols mt-16">
+        <section class="card avoid-break">
+          <div class="card-head"><h3>Ratings across the sector</h3></div>
+          <div class="chart-wrap" id="levelDistribution"></div>
+        </section>
+        <section class="card avoid-break">
+          <div class="card-head"><h3>Returns received</h3></div>
+          <div id="coveragePanel"></div>
+        </section>
+      </div>
+
+      <div class="section-title"><h2>Where the sector is weakest</h2>
+        <span class="hint">Average rating by section of the questionnaire.</span>
+      </div>
+      <div class="chart-cols">
+        <section class="card avoid-break">
+          <div class="card-head">
+            <h3>Sector profile</h3>
+            <div class="spacer"></div>
+            <select id="compareEntity" class="no-print" style="max-width:240px"><option value="">Compare an organisation…</option></select>
+          </div>
+          <div class="chart-wrap" id="sectorRadar"></div>
+        </section>
+        <section class="card avoid-break">
+          <div class="card-head"><h3>Average by section</h3></div>
+          <div class="chart-wrap" id="sectionBars"></div>
+        </section>
+      </div>
+
+      <section class="card avoid-break">
+        <div class="card-head"><h3>Section detail</h3><div class="spacer"></div>
+          <span class="card-note">Weight shows how much each section contributes to the overall rating.</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="sectionTable">
+            <thead><tr>
+              <th>Section</th><th class="num">Weight</th><th class="num">Average</th><th class="num">Lowest</th>
+              <th class="num">Highest</th><th class="num">Spread</th><th class="num">Below target</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="section-title page-break"><h2>Comparison across organisations</h2></div>
+      <section class="card avoid-break">
+        <div class="card-head"><h3>Overall rating by organisation</h3></div>
+        <div class="chart-wrap" id="entityRanking"></div>
+      </section>
+
+      <section class="card avoid-break">
+        <div class="card-head"><h3>Organisation by section</h3><div class="spacer"></div>
+          <span class="card-note">Column letters match the section detail table above.</span>
+        </div>
+        <div class="chart-wrap" id="heatmap"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h3>All organisations</h3><div class="spacer"></div>
+          <span class="card-note no-print">Click a column heading to sort. Use <em>Report</em> to open the full write-up.</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="entityTable">
+            <thead><tr>
+              <th class="sortable" data-sort="entityCode">Code</th>
+              <th class="sortable" data-sort="entityName">Organisation</th>
+              <th class="sortable" data-sort="entityType">Type</th>
+              <th class="sortable" data-sort="region">Region</th>
+              <th class="sortable num" data-sort="score">Rating</th>
+              <th class="sortable num" data-sort="level">Band</th>
+              <th class="sortable num" data-sort="completeness">Answered</th>
+              <th class="sortable num" data-sort="unsureCount">Not sure</th>
+              <th class="num">Priority 1</th>
+              <th class="no-print"></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="chart-cols">
+        <section class="card avoid-break">
+          <div class="card-head"><h3>Average by type of organisation</h3></div>
+          <div class="chart-wrap" id="byTypeChart"></div>
+        </section>
+        <section class="card avoid-break">
+          <div class="card-head"><h3>Average by region</h3></div>
+          <div class="chart-wrap" id="byRegionChart"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== ORGANISATION REPORT ======================== -->
+  <div class="view" id="view-entity" hidden>
+    <div class="card no-print">
+      <div class="card-head">
+        <h3>Choose an organisation</h3>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-primary" id="btnPrintEntity">Export this report as PDF</button>
+      </div>
+      <div class="field mb-0" style="max-width:460px">
+        <label for="entityPicker">Organisation</label>
+        <select id="entityPicker"></select>
+      </div>
+    </div>
+    <div id="entityReport"></div>
+  </div>
+
+  <!-- ========================= QUESTION ANALYSIS ========================= -->
+  <div class="view" id="view-questions" hidden>
+    <div class="section-title"><h2>Question analysis</h2>
+      <span class="hint">How every organisation in scope answered, and what it maps to.</span>
+    </div>
+
+    <div class="chart-cols">
+      <section class="card avoid-break">
+        <div class="card-head"><h3>Weakest controls across the sector</h3></div>
+        <div class="table-wrap">
+          <table class="data" id="weakTable">
+            <thead><tr><th>Question</th><th class="num">Average</th><th class="num">Weak</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="card avoid-break">
+        <div class="card-head"><h3>Actions needed by the most organisations</h3></div>
+        <div class="table-wrap">
+          <table class="data" id="commonActionsTable">
+            <thead><tr><th>Recommended action</th><th class="num">Orgs</th><th class="num">P1</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-head">
+        <h3>Every question</h3>
+        <div class="spacer"></div>
+        <div class="field mb-0 no-print" style="max-width:260px">
+          <select id="questionSectionFilter"><option value="">All sections</option></select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data" id="questionTable">
+          <thead><tr>
+            <th class="num">No.</th><th>Question</th><th>Maps to</th>
+            <th class="num">Average</th><th>How they answered</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- ========================== RETURNS & EXPORTS ========================= -->
+  <div class="view" id="view-data" hidden>
+    <div class="card">
+      <div class="card-head">
+        <h2>Load returns</h2>
+        <div class="spacer"></div>
+        <span class="pill" id="recordCountPill">0 returns loaded</span>
+      </div>
+      <div class="dropzone" id="dropzone">
+        <strong>Drop the .json data files here</strong>
+        or click to choose files — you can select all of them at once
+        <input type="file" id="fileInput" accept="application/json,.json" multiple hidden />
+      </div>
+      <div class="toolbar mt-16">
+        <button type="button" class="btn" id="btnDemo">Load demonstration data</button>
+        <button type="button" class="btn" id="btnExportCombined">Export combined JSON</button>
+        <button type="button" class="btn" id="btnExportCSV">Export organisation CSV</button>
+        <button type="button" class="btn" id="btnExportAnswersCSV">Export answer-level CSV</button>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-danger" id="btnClear">Remove all returns</button>
+      </div>
+      <div id="loadMessages" class="stack-8 mt-16"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Assessment settings</h3></div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="targetSelect">Target rating for this cycle</label>
+          <select id="targetSelect"></select>
+          <span class="help">Used to decide which answers become improvement actions, and who counts as meeting expectations.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Returns loaded</h3></div>
+      <div class="table-wrap">
+        <table class="data" id="recordTable">
+          <thead><tr>
+            <th>Code</th><th>Organisation</th><th>Cycle</th><th>Completed by</th>
+            <th>Date</th><th class="num">Answered</th><th>Declared</th><th>Source file</th><th class="no-print"></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="callout">
+        <h4>Handling these files</h4>
+        <p class="mb-0">Returns are held in this browser only and are never uploaded anywhere by this page. They are classified <span data-brand="classification"></span>: use a managed device, and clear the data when you have finished with it.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== METHOD =============================== -->
+  <div class="view" id="view-method" hidden>
+    <div class="card">
+      <h2>How the rating is produced</h2>
+      <p>Organisations answer plain questions — mostly <strong>Yes / No / Not sure</strong>, a choice from a list, or a set of tick boxes. They are never shown a score. Each answer carries a value from 0 to 5 that only this console applies, so returns stay easy to complete but still comparable.</p>
+
+      <h3>From answers to a rating</h3>
+      <ol>
+        <li><strong>Each answer becomes a value out of 5.</strong> Yes scores 5, No scores 0, and <em>Not sure</em> scores 1 — if the accountable respondent cannot confirm a control, it is not being managed. Answers picked from a list carry the value shown in the table below. For tick-box questions the value is the share of items ticked.</li>
+        <li><strong>Each section is a weighted average</strong> of its questions. Core questions count 1.5 times a standard one.</li>
+        <li><strong>The overall rating is a weighted average of the sections</strong>, using the section weights shown on the dashboard. Questions marked <em>Not applicable</em> are left out of both the top and bottom of the average, rather than counted as zero.</li>
+        <li><strong>Anything below the target rating becomes an action</strong>, ranked by section weight × question weight × the size of the gap. The top band is Priority 1.</li>
+      </ol>
+
+      <div class="callout warn">
+        <h4>Two things to remember when you report this</h4>
+        <p class="mb-0">Returns are self-declared: the rating reflects what organisations tell you, not audited evidence. And a low <em>answered</em> percentage or a high <em>Not sure</em> count matters as much as a low rating — it usually means nobody has visibility, which is itself the finding.</p>
+      </div>
+
+      <h3 class="mt-16">Rating bands</h3>
+      <div class="table-wrap">
+        <table class="data" id="levelTable">
+          <thead><tr><th>Band</th><th class="num">Range</th><th>What it means</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <h3 class="mt-16">Answer values</h3>
+      <div class="table-wrap">
+        <table class="data" id="scaleTable">
+          <thead><tr><th>Question type</th><th>Answer</th><th class="num">Value</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Frameworks the questions are based on</h2>
+      <p class="card-note">Every question maps to at least one published framework, so findings can be defended and mapped to existing control sets.</p>
+      <div class="table-wrap">
+        <table class="data" id="frameworkTable">
+          <thead><tr><th>Framework</th><th>Publisher</th><th class="num">Year</th><th class="num">Questions</th><th>Used for</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Sections and weights</h2>
+      <div class="table-wrap">
+        <table class="data" id="methodSectionTable">
+          <thead><tr><th>Section</th><th class="num">Weight</th><th class="num">Questions</th><th>Maps to</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script src="assets/js/branding.js"></script>
+<script src="assets/js/framework.js"></script>
+<script src="assets/js/scoring.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/console.js"></script>
+</body>
+</html>

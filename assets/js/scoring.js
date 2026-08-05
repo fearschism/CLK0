@@ -1,11 +1,16 @@
 /*
- * Scoring engine
- * --------------
- * Pure functions shared by the survey page and the dashboard so a score
- * calculated at data-entry time always matches the score recomputed later
- * from an exported JSON file.
+ * Rating engine (governing body side)
+ * -----------------------------------
+ * Turns plain answers into a comparable rating. Respondents never see any of
+ * this: the questionnaire asks "Yes / No / Not sure" or offers a list, and the
+ * score for each option lives in framework.js.
  *
- * Answer shape:  answers["GOV-1"] = { value: 0..5 | "na", note: "free text" }
+ * Answer shapes stored in a return file:
+ *   yesno   { value: 'yes' | 'no' | 'unsure' | 'na' }
+ *   choice  { value: '<option value>' | 'na' }
+ *   multi   { value: ['<option value>', ...] }   // ['none'] means none of them
+ *   number  { value: 12 }
+ *   text    { value: 'free text' }
  */
 window.AIMA = window.AIMA || {};
 
@@ -13,21 +18,106 @@ window.AIMA = window.AIMA || {};
   'use strict';
 
   var NA = AIMA.NOT_APPLICABLE;
-
-  function isScored(answer) {
-    return !!answer && answer.value !== undefined && answer.value !== null && answer.value !== '' && answer.value !== NA;
-  }
-
-  function isNotApplicable(answer) {
-    return !!answer && answer.value === NA;
-  }
+  var NONE = 'none';
 
   function round(value, dp) {
     var f = Math.pow(10, dp === undefined ? 2 : dp);
     return Math.round(value * f) / f;
   }
 
-  /** Maturity level object for a 0–5 score. */
+  function isBlank(value) {
+    return value === undefined || value === null || value === '' ||
+      (Array.isArray(value) && value.length === 0);
+  }
+
+  /** Has the respondent given any answer at all? Drives the progress bar. */
+  function isAnswered(question, answer) {
+    if (!answer) return false;
+    if (question.type === 'number') {
+      return answer.value !== '' && answer.value !== null && answer.value !== undefined && !isNaN(Number(answer.value));
+    }
+    return !isBlank(answer.value);
+  }
+
+  /**
+   * Score for one answer: a number 0-5, the string 'na', or null when the
+   * question is unanswered or does not contribute to the rating.
+   */
+  function scoreAnswer(question, answer) {
+    if (!question.scored) return null;
+    if (!isAnswered(question, answer)) return null;
+    var value = answer.value;
+
+    if (question.type === 'multi') {
+      if (value.indexOf(NA) !== -1) return NA;
+      if (value.indexOf(NONE) !== -1) return 0;
+      var options = question.options || [];
+      var total = options.reduce(function (sum, o) { return sum + (o.points === undefined ? 1 : o.points); }, 0);
+      var earned = options.reduce(function (sum, o) {
+        return value.indexOf(o.value) === -1 ? sum : sum + (o.points === undefined ? 1 : o.points);
+      }, 0);
+      return total > 0 ? round((earned / total) * 5, 3) : null;
+    }
+
+    if (value === NA) return NA;
+
+    if (question.type === 'yesno') {
+      var mapped = AIMA.yesNoScores[value];
+      return mapped === undefined ? null : mapped;
+    }
+
+    if (question.type === 'choice') {
+      var option = (question.options || []).filter(function (o) { return o.value === value; })[0];
+      return option && option.score !== undefined ? option.score : null;
+    }
+
+    if (question.type === 'number' && question.bands) {
+      var number = Number(value);
+      for (var i = 0; i < question.bands.length; i++) {
+        var band = question.bands[i];
+        if ((band.min === undefined || number >= band.min) && (band.max === undefined || number <= band.max)) {
+          return band.score;
+        }
+      }
+      return null;
+    }
+
+    return null;
+  }
+
+  /** Plain-language rendering of an answer, used in printouts and the console. */
+  function describeAnswer(question, answer) {
+    if (!isAnswered(question, answer)) return 'Not answered';
+    var value = answer.value;
+
+    if (question.type === 'multi') {
+      if (value.indexOf(NA) !== -1) return 'Not applicable';
+      if (value.indexOf(NONE) !== -1) return question.noneLabel || 'None of these';
+      var labels = (question.options || [])
+        .filter(function (o) { return value.indexOf(o.value) !== -1; })
+        .map(function (o) { return o.label; });
+      return labels.length ? labels.join('; ') : 'Not answered';
+    }
+
+    if (value === NA) return 'Not applicable';
+
+    if (question.type === 'yesno') {
+      var yn = AIMA.yesNoOptions.filter(function (o) { return o.value === value; })[0];
+      return yn ? yn.label : String(value);
+    }
+
+    if (question.type === 'choice') {
+      var option = (question.options || []).filter(function (o) { return o.value === value; })[0];
+      return option ? option.label : String(value);
+    }
+
+    if (question.type === 'number') {
+      return String(value) + (question.unit ? ' ' + question.unit : '');
+    }
+
+    return String(value);
+  }
+
   function levelFor(score) {
     if (score === null || score === undefined || isNaN(score)) return null;
     var clamped = Math.max(0, Math.min(5, score));
@@ -37,77 +127,85 @@ window.AIMA = window.AIMA || {};
     return AIMA.levels[AIMA.levels.length - 1];
   }
 
-  /** A 0–5 score expressed as a 0–100 index. */
   function toPercent(score) {
     if (score === null || score === undefined || isNaN(score)) return null;
     return round((score / 5) * 100, 1);
   }
 
-  /** Weighted score for one domain. Returns score === null when nothing scored. */
-  function scoreDomain(domain, answers) {
+  /** Weighted rating for one section. */
+  function scoreSection(section, answers) {
     var weighted = 0;
     var weightUsed = 0;
     var scored = 0;
     var na = 0;
+    var unsure = 0;
+    var answered = 0;
+    var total = 0;
 
-    domain.questions.forEach(function (q) {
-      var answer = answers[q.id];
-      if (isNotApplicable(answer)) { na++; return; }
-      if (!isScored(answer)) return;
-      weighted += Number(answer.value) * q.weight;
-      weightUsed += q.weight;
+    section.questions.forEach(function (raw) {
+      var question = AIMA.getQuestion(raw.id);
+      total++;
+      if (isAnswered(question, answers[question.id])) answered++;
+      if (!question.scored) return;
+
+      var result = scoreAnswer(question, answers[question.id]);
+      if (result === NA) { na++; return; }
+      if (result === null) return;
+      if (question.type === 'yesno' && answers[question.id].value === 'unsure') unsure++;
+
+      weighted += result * question.weight;
+      weightUsed += question.weight;
       scored++;
     });
 
     var score = weightUsed > 0 ? weighted / weightUsed : null;
+    var level = score === null ? null : levelFor(score);
 
     return {
-      domainId: domain.id,
-      name: domain.name,
-      weight: domain.weight,
+      sectionId: section.id,
+      title: section.title,
+      weight: section.weight,
       score: score === null ? null : round(score, 2),
       percent: toPercent(score),
-      level: score === null ? null : levelFor(score).level,
-      levelName: score === null ? null : levelFor(score).name,
-      color: score === null ? '#94a3b8' : levelFor(score).color,
-      questionsTotal: domain.questions.length,
+      level: level ? level.level : null,
+      levelName: level ? level.name : null,
+      color: level ? level.color : '#94a3b8',
+      questionsTotal: total,
+      questionsAnswered: answered,
       questionsScored: scored,
       questionsNotApplicable: na,
-      answered: scored + na,
-      complete: (scored + na) === domain.questions.length
+      unsureCount: unsure,
+      complete: answered === total
     };
   }
 
-  /**
-   * Priority actions for every scored question that sits below the target level,
-   * ranked by domain weight × question weight × size of the gap.
-   */
+  /** Improvement actions for every scored answer below the target. */
   function buildActions(answers, targetLevel) {
     var target = targetLevel || AIMA.defaultTargetLevel;
     var actions = [];
 
-    AIMA.allQuestions.forEach(function (q) {
-      var answer = answers[q.id];
-      if (!isScored(answer)) return;
-      var value = Number(answer.value);
-      var gap = target - value;
+    AIMA.allQuestions.forEach(function (question) {
+      if (!question.scored || !question.remedy) return;
+      var result = scoreAnswer(question, answers[question.id]);
+      if (result === null || result === NA) return;
+      var gap = target - result;
       if (gap <= 0) return;
 
-      var priorityScore = round(gap * q.weight * q.domainWeight, 2);
-      var priority = priorityScore >= 30 ? 1 : (priorityScore >= 15 ? 2 : 3);
-
+      var priorityScore = round(gap * question.weight * question.sectionWeight, 2);
       actions.push({
-        questionId: q.id,
-        domainId: q.domainId,
-        domainName: q.domainName,
-        question: q.text,
-        action: q.remedy,
-        current: value,
+        questionId: question.id,
+        questionNumber: question.number,
+        sectionId: question.sectionId,
+        sectionTitle: question.sectionTitle,
+        question: question.text,
+        answer: describeAnswer(question, answers[question.id]),
+        action: question.remedy,
+        score: round(result, 2),
         target: target,
         gap: round(gap, 2),
         priorityScore: priorityScore,
-        priority: priority,
-        note: answer.note || ''
+        priority: priorityScore >= 30 ? 1 : (priorityScore >= 15 ? 2 : 3),
+        refs: question.refs || []
       });
     });
 
@@ -117,56 +215,51 @@ window.AIMA = window.AIMA || {};
     return actions;
   }
 
-  /** Questions already at or above 4 — used for the strengths panel. */
   function buildStrengths(answers) {
     var strengths = [];
-    AIMA.allQuestions.forEach(function (q) {
-      var answer = answers[q.id];
-      if (!isScored(answer)) return;
-      if (Number(answer.value) >= 4) {
-        strengths.push({
-          questionId: q.id,
-          domainId: q.domainId,
-          domainName: q.domainName,
-          question: q.text,
-          score: Number(answer.value)
-        });
-      }
+    AIMA.allQuestions.forEach(function (question) {
+      if (!question.scored) return;
+      var result = scoreAnswer(question, answers[question.id]);
+      if (result === null || result === NA || result < 4) return;
+      strengths.push({
+        questionId: question.id,
+        sectionId: question.sectionId,
+        sectionTitle: question.sectionTitle,
+        question: question.text,
+        answer: describeAnswer(question, answers[question.id]),
+        score: round(result, 2)
+      });
     });
     strengths.sort(function (a, b) { return b.score - a.score || a.questionId.localeCompare(b.questionId); });
     return strengths;
   }
 
-  /**
-   * Full result set for a single assessment.
-   * Overall score = domain scores weighted by domain weight, ignoring domains
-   * where every question was skipped or marked not applicable.
-   */
-  function computeResults(assessment) {
-    var answers = (assessment && assessment.answers) || {};
-    var targetLevel = (assessment && assessment.targetLevel) || AIMA.defaultTargetLevel;
+  /** Everything the console needs about one return. */
+  function computeResults(record) {
+    var answers = (record && record.answers) || {};
+    var targetLevel = (record && record.targetLevel) || AIMA.defaultTargetLevel;
 
-    var domains = AIMA.domains.map(function (d) { return scoreDomain(d, answers); });
+    var sections = AIMA.sections.map(function (s) { return scoreSection(s, answers); });
 
     var weighted = 0;
     var weightUsed = 0;
-    domains.forEach(function (d) {
-      if (d.score === null) return;
-      weighted += d.score * d.weight;
-      weightUsed += d.weight;
+    sections.forEach(function (s) {
+      if (s.score === null) return;
+      weighted += s.score * s.weight;
+      weightUsed += s.weight;
     });
 
     var overallScore = weightUsed > 0 ? weighted / weightUsed : null;
     var level = overallScore === null ? null : levelFor(overallScore);
 
-    var answeredCount = 0;
+    var answered = 0;
     var naCount = 0;
-    var notesCount = 0;
-    AIMA.allQuestions.forEach(function (q) {
-      var a = answers[q.id];
-      if (isNotApplicable(a)) { naCount++; answeredCount++; }
-      else if (isScored(a)) { answeredCount++; }
-      if (a && a.note && String(a.note).trim()) notesCount++;
+    var unsureCount = 0;
+    AIMA.allQuestions.forEach(function (question) {
+      var answer = answers[question.id];
+      if (isAnswered(question, answer)) answered++;
+      if (answer && (answer.value === NA || (Array.isArray(answer.value) && answer.value.indexOf(NA) !== -1))) naCount++;
+      if (answer && answer.value === 'unsure') unsureCount++;
     });
 
     var actions = buildActions(answers, targetLevel);
@@ -184,13 +277,17 @@ window.AIMA = window.AIMA || {};
         color: level ? level.color : '#94a3b8',
         gapToTarget: overallScore === null ? null : round(Math.max(0, targetLevel - overallScore), 2)
       },
-      domains: domains,
+      sections: sections,
       completeness: {
-        answered: answeredCount,
+        answered: answered,
         total: AIMA.questionCount,
-        percent: round((answeredCount / AIMA.questionCount) * 100, 1),
+        percent: round((answered / AIMA.questionCount) * 100, 1),
         notApplicable: naCount,
-        withEvidenceNotes: notesCount
+        complete: answered === AIMA.questionCount
+      },
+      visibility: {
+        unsureCount: unsureCount,
+        percentOfScored: round((unsureCount / AIMA.scoredQuestionCount) * 100, 1)
       },
       actions: actions,
       priorityCounts: {
@@ -203,13 +300,12 @@ window.AIMA = window.AIMA || {};
   }
 
   /* ------------------------------------------------------------------ *
-   * Sector-level aggregation (dashboard)
+   * Sector aggregation
    * ------------------------------------------------------------------ */
 
   function mean(values) {
     if (!values.length) return null;
-    var sum = values.reduce(function (a, b) { return a + b; }, 0);
-    return round(sum / values.length, 2);
+    return round(values.reduce(function (a, b) { return a + b; }, 0) / values.length, 2);
   }
 
   function median(values) {
@@ -219,25 +315,22 @@ window.AIMA = window.AIMA || {};
     return round(sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2, 2);
   }
 
-  /**
-   * Aggregate any number of assessments into the shape the dashboard renders.
-   * Each input is a full assessment record (results are recomputed, never trusted).
-   */
-  function aggregate(assessments) {
-    var rows = assessments.map(function (a) {
-      var results = computeResults(a);
-      var domainScores = {};
-      results.domains.forEach(function (d) { domainScores[d.domainId] = d.score; });
+  function aggregate(records) {
+    var rows = records.map(function (record) {
+      var results = computeResults(record);
+      var sectionScores = {};
+      results.sections.forEach(function (s) { sectionScores[s.sectionId] = s.score; });
       return {
-        id: a.id,
-        entityCode: (a.entity && a.entity.code) || '—',
-        entityName: (a.entity && a.entity.name) || 'Unnamed entity',
-        entityType: (a.entity && a.entity.type) || '—',
-        region: (a.entity && a.entity.region) || '—',
-        size: (a.entity && a.entity.size) || '—',
-        period: a.period || '—',
-        assessmentDate: a.assessmentDate || '—',
-        respondent: (a.respondent && a.respondent.name) || '—',
+        id: record.id,
+        entityCode: (record.entity && record.entity.code) || '—',
+        entityName: (record.entity && record.entity.name) || 'Unnamed organisation',
+        entityType: (record.entity && record.entity.type) || '—',
+        region: (record.entity && record.entity.region) || '—',
+        size: (record.entity && record.entity.size) || '—',
+        period: record.period || '—',
+        submittedDate: record.submittedDate || '—',
+        contactName: (record.contact && record.contact.contactName) || '—',
+        contactRole: (record.contact && record.contact.contactRole) || '',
         targetLevel: results.targetLevel,
         score: results.overall.score,
         percent: results.overall.percent,
@@ -245,24 +338,29 @@ window.AIMA = window.AIMA || {};
         levelName: results.overall.levelName,
         color: results.overall.color,
         completeness: results.completeness.percent,
-        domainScores: domainScores,
+        unsureCount: results.visibility.unsureCount,
+        sectionScores: sectionScores,
         actions: results.actions,
-        answers: a.answers || {}
+        strengths: results.strengths,
+        results: results,
+        answers: record.answers || {},
+        sectionNotes: record.sectionNotes || {},
+        demo: !!record.demo
       };
     });
 
     var scored = rows.filter(function (r) { return r.score !== null; });
     var scores = scored.map(function (r) { return r.score; });
 
-    var domainAverages = AIMA.domains.map(function (d) {
+    var sectionAverages = AIMA.sections.map(function (section) {
       var values = scored
-        .map(function (r) { return r.domainScores[d.id]; })
+        .map(function (r) { return r.sectionScores[section.id]; })
         .filter(function (v) { return v !== null && v !== undefined; });
       var avg = mean(values);
       return {
-        domainId: d.id,
-        name: d.name,
-        weight: d.weight,
+        sectionId: section.id,
+        title: section.title,
+        weight: section.weight,
         avg: avg,
         min: values.length ? round(Math.min.apply(null, values), 2) : null,
         max: values.length ? round(Math.max.apply(null, values), 2) : null,
@@ -270,7 +368,7 @@ window.AIMA = window.AIMA || {};
         level: avg === null ? null : levelFor(avg).level,
         color: avg === null ? '#94a3b8' : levelFor(avg).color,
         entitiesBelowTarget: scored.filter(function (r) {
-          var v = r.domainScores[d.id];
+          var v = r.sectionScores[section.id];
           return v !== null && v !== undefined && v < r.targetLevel;
         }).length
       };
@@ -287,33 +385,71 @@ window.AIMA = window.AIMA || {};
       };
     });
 
-    var questionAverages = AIMA.allQuestions.map(function (q) {
+    // Per-question view, including how the answers were distributed.
+    var questionStats = AIMA.allQuestions.map(function (question) {
       var values = [];
-      scored.forEach(function (r) {
-        var a = r.answers[q.id];
-        if (isScored(a)) values.push(Number(a.value));
+      var distribution = {};
+      var naCount = 0;
+      var responses = 0;
+
+      scored.forEach(function (row) {
+        var answer = row.answers[question.id];
+        if (!isAnswered(question, answer)) return;
+        responses++;
+        var label = describeAnswer(question, answer);
+        if (question.type === 'yesno' || question.type === 'choice') {
+          distribution[label] = (distribution[label] || 0) + 1;
+        }
+        var result = scoreAnswer(question, answer);
+        if (result === NA) { naCount++; return; }
+        if (result !== null) values.push(result);
       });
+
       return {
-        questionId: q.id,
-        domainId: q.domainId,
-        domainName: q.domainName,
-        question: q.text,
+        questionId: question.id,
+        questionNumber: question.number,
+        sectionId: question.sectionId,
+        sectionTitle: question.sectionTitle,
+        question: question.text,
+        type: question.type,
+        scored: question.scored,
+        refs: question.refs || [],
         avg: mean(values),
-        responses: values.length,
-        entitiesAtOrBelow2: values.filter(function (v) { return v <= 2; }).length
+        responses: responses,
+        notApplicable: naCount,
+        distribution: distribution,
+        entitiesAtOrBelow2: values.filter(function (v) { return v <= 2; }).length,
+        entitiesAtOrAbove4: values.filter(function (v) { return v >= 4; }).length
       };
-    }).filter(function (q) { return q.avg !== null; });
+    });
+
+    var scoredStats = questionStats.filter(function (q) { return q.scored && q.avg !== null; });
 
     function groupBy(key) {
       var map = {};
-      scored.forEach(function (r) {
-        var k = r[key] || '—';
-        (map[k] = map[k] || []).push(r.score);
+      scored.forEach(function (row) {
+        var k = row[key] || '—';
+        (map[k] = map[k] || []).push(row.score);
       });
       return Object.keys(map).sort().map(function (k) {
         return { key: k, count: map[k].length, avg: mean(map[k]) };
       });
     }
+
+    var commonActions = {};
+    rows.forEach(function (row) {
+      row.actions.forEach(function (action) {
+        var bucket = commonActions[action.questionId] || (commonActions[action.questionId] = {
+          questionId: action.questionId,
+          sectionId: action.sectionId,
+          action: action.action,
+          entities: 0,
+          p1: 0
+        });
+        bucket.entities++;
+        if (action.priority === 1) bucket.p1++;
+      });
+    });
 
     var sectorAvg = mean(scores);
 
@@ -344,28 +480,54 @@ window.AIMA = window.AIMA || {};
         avgCompleteness: mean(rows.map(function (r) { return r.completeness; })),
         belowTarget: scored.filter(function (r) { return r.score < r.targetLevel; }).length,
         atOrAboveTarget: scored.filter(function (r) { return r.score >= r.targetLevel; }).length,
-        atRisk: scored.filter(function (r) { return r.level <= 2; }).length
+        atRisk: scored.filter(function (r) { return r.level <= 2; }).length,
+        totalUnsure: rows.reduce(function (sum, r) { return sum + r.unsureCount; }, 0)
       },
-      domainAverages: domainAverages,
+      sectionAverages: sectionAverages,
       levelDistribution: levelDistribution,
-      weakestControls: questionAverages.slice().sort(function (a, b) { return a.avg - b.avg; }).slice(0, 12),
-      strongestControls: questionAverages.slice().sort(function (a, b) { return b.avg - a.avg; }).slice(0, 8),
+      questionStats: questionStats,
+      weakestControls: scoredStats.slice().sort(function (a, b) { return a.avg - b.avg; }).slice(0, 12),
+      strongestControls: scoredStats.slice().sort(function (a, b) { return b.avg - a.avg; }).slice(0, 8),
+      commonActions: Object.keys(commonActions).map(function (k) { return commonActions[k]; })
+        .sort(function (a, b) { return b.p1 - a.p1 || b.entities - a.entities; }),
       byType: groupBy('entityType'),
       byRegion: groupBy('region')
     };
   }
 
+  /** How many questions map to each reference framework. */
+  function frameworkCoverage() {
+    return AIMA.frameworks.map(function (framework) {
+      var questions = AIMA.allQuestions.filter(function (q) {
+        return (q.refs || []).some(function (r) { return r.key === framework.key; });
+      });
+      return {
+        key: framework.key,
+        name: framework.name,
+        short: framework.short,
+        publisher: framework.publisher,
+        year: framework.year,
+        note: framework.note,
+        questionCount: questions.length,
+        questionIds: questions.map(function (q) { return q.id; })
+      };
+    }).sort(function (a, b) { return b.questionCount - a.questionCount; });
+  }
+
   AIMA.scoring = {
-    isScored: isScored,
-    isNotApplicable: isNotApplicable,
+    isAnswered: isAnswered,
+    scoreAnswer: scoreAnswer,
+    describeAnswer: describeAnswer,
     levelFor: levelFor,
     toPercent: toPercent,
-    scoreDomain: scoreDomain,
+    scoreSection: scoreSection,
     computeResults: computeResults,
     buildActions: buildActions,
     aggregate: aggregate,
+    frameworkCoverage: frameworkCoverage,
     round: round,
     mean: mean,
-    median: median
+    median: median,
+    NONE: NONE
   };
 })(window.AIMA);
