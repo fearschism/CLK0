@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI in Cybersecurity Maturity Assessment — Entity Questionnaire</title>
+<meta name="description" content="Weighted maturity questionnaire measuring how a health entity adopts artificial intelligence within its cybersecurity programme. Exports to PDF and JSON." />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+<header class="app-header no-print">
+  <div class="brand">
+    <div class="brand-mark">AI&nbsp;MA</div>
+    <div>
+      <h1>AI in Cybersecurity Maturity Assessment</h1>
+      <div class="subtitle" id="headerSubtitle">Entity questionnaire · framework <span id="fwVersion"></span></div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <nav class="nav-tabs" role="tablist" aria-label="Sections">
+    <button type="button" role="tab" id="tab-assess" aria-selected="true" data-view="assess">Questionnaire</button>
+    <button type="button" role="tab" id="tab-results" aria-selected="false" data-view="results">Results</button>
+    <button type="button" role="tab" id="tab-data" aria-selected="false" data-view="data">Export &amp; data</button>
+  </nav>
+  <div class="header-actions">
+    <a class="btn btn-ghost" href="dashboard.html" target="_blank" rel="noopener">Sector dashboard ↗</a>
+    <button type="button" class="btn btn-primary" id="btnPrintTop">Export PDF</button>
+  </div>
+</header>
+
+<!-- Printed report letterhead (hidden on screen) -->
+<div class="report-header" id="reportHeader">
+  <div class="report-org" id="reportOrg">Health Sector Governing Body — Cybersecurity Directorate</div>
+  <h1>AI in Cybersecurity Maturity Assessment</h1>
+  <div class="report-sub" id="reportSub">Entity assessment report</div>
+  <div class="report-meta" id="reportMeta"></div>
+</div>
+
+<!-- ============================ QUESTIONNAIRE ============================ -->
+<main class="view" id="view-assess">
+  <div class="layout">
+    <aside class="sidebar no-print">
+      <div class="card">
+        <div class="progress-ring">
+          <svg class="ring" viewBox="0 0 74 74" aria-hidden="true">
+            <circle cx="37" cy="37" r="30" fill="none" stroke="#eef2f7" stroke-width="8"></circle>
+            <circle id="ringProgress" cx="37" cy="37" r="30" fill="none" stroke="#0d9488" stroke-width="8"
+                    stroke-linecap="round" stroke-dasharray="0 188.5" transform="rotate(-90 37 37)"></circle>
+          </svg>
+          <div class="ring-label">
+            <strong id="progressPercent">0%</strong>
+            <span id="progressCount">0 of 0 questions answered</span>
+          </div>
+        </div>
+        <div class="card-note mt-16" id="liveScoreNote">Current weighted score will appear once you answer a question.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Domains</h3></div>
+        <ul class="domain-nav" id="domainNav"></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Scoring scale</h3></div>
+        <ul class="legend-levels" id="scaleLegend" style="flex-direction:column;gap:7px"></ul>
+      </div>
+    </aside>
+
+    <div>
+      <section class="card" id="metaCard">
+        <div class="card-head">
+          <h2>1 · Entity &amp; respondent details</h2>
+          <div class="spacer"></div>
+          <span class="pill" id="statusPill">Draft</span>
+        </div>
+        <div class="grid-2">
+          <div class="field" id="field-entity">
+            <label for="entitySelect">Entity <span class="required-mark">*</span></label>
+            <select id="entitySelect"></select>
+            <span class="help">Select the entity being assessed from the governing body register.</span>
+          </div>
+          <div class="field" id="field-entityName" hidden>
+            <label for="entityNameInput">Entity name <span class="required-mark">*</span></label>
+            <input type="text" id="entityNameInput" placeholder="Enter the entity name" />
+          </div>
+          <div class="field">
+            <label for="entityTypeSelect">Entity type</label>
+            <select id="entityTypeSelect"></select>
+          </div>
+          <div class="field">
+            <label for="regionSelect">Region</label>
+            <select id="regionSelect"></select>
+          </div>
+          <div class="field">
+            <label for="sizeSelect">Size band</label>
+            <select id="sizeSelect"></select>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="field">
+            <label for="periodInput">Assessment cycle</label>
+            <input type="text" id="periodInput" placeholder="e.g. 2026 H1" />
+          </div>
+          <div class="field">
+            <label for="dateInput">Assessment date</label>
+            <input type="date" id="dateInput" />
+          </div>
+          <div class="field">
+            <label for="targetSelect">Target maturity level</label>
+            <select id="targetSelect"></select>
+            <span class="help">Level the governing body expects entities to reach.</span>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="field" id="field-respondent">
+            <label for="respondentName">Respondent name <span class="required-mark">*</span></label>
+            <input type="text" id="respondentName" placeholder="Full name" />
+          </div>
+          <div class="field">
+            <label for="respondentRole">Role / title</label>
+            <input type="text" id="respondentRole" placeholder="e.g. Chief Information Security Officer" />
+          </div>
+          <div class="field">
+            <label for="respondentEmail">Email</label>
+            <input type="email" id="respondentEmail" placeholder="name@entity.org" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="reviewerInput">Reviewed / validated by</label>
+            <input type="text" id="reviewerInput" placeholder="Governing body reviewer (optional)" />
+          </div>
+          <div class="field">
+            <label for="statusSelect">Submission status</label>
+            <select id="statusSelect">
+              <option value="Draft">Draft</option>
+              <option value="Submitted">Submitted to governing body</option>
+              <option value="Validated">Validated by governing body</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="scopeNotes">Scope, exclusions &amp; assumptions</label>
+          <textarea id="scopeNotes" placeholder="Systems or business units excluded from this assessment, shared services relied upon, known data limitations…"></textarea>
+        </div>
+      </section>
+
+      <div class="section-title no-print">
+        <h2>2 · Assessment questions</h2>
+        <span class="hint">Score each statement 0–5, or mark <strong>N/A</strong> where it genuinely does not apply. Use the note field to capture evidence.</span>
+      </div>
+
+      <div id="questionContainer"></div>
+
+      <div class="card no-print" id="wrapUpCard">
+        <div class="card-head"><h2>3 · Overall observations</h2></div>
+        <div class="field">
+          <label for="generalNotes">Respondent commentary</label>
+          <textarea id="generalNotes" placeholder="Key constraints, planned initiatives, support requested from the governing body…"></textarea>
+        </div>
+        <div class="toolbar">
+          <button type="button" class="btn btn-primary" id="btnGoResults">Calculate results</button>
+          <button type="button" class="btn" id="btnGoData">Export &amp; data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ============================== RESULTS =============================== -->
+<main class="view page" id="view-results" hidden>
+  <div class="card no-print" id="resultsIncompleteBanner" hidden>
+    <div class="callout warn" id="resultsIncompleteText"></div>
+  </div>
+
+  <section class="card avoid-break">
+    <div class="card-head">
+      <h2>Assessment summary</h2>
+      <div class="spacer"></div>
+      <button type="button" class="btn btn-primary no-print" id="btnPrint">Export PDF</button>
+      <button type="button" class="btn no-print" id="btnExportJSONResults">Export JSON</button>
+    </div>
+    <div id="summaryMeta" class="card-note"></div>
+    <div style="display:grid;grid-template-columns:minmax(190px,240px) minmax(0,1fr);gap:20px;align-items:center;margin-top:12px">
+      <div id="overallGauge"></div>
+      <div>
+        <div id="overallHeadline"></div>
+        <div class="kpi-grid mt-16" id="summaryKpis"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="chart-cols">
+    <section class="card avoid-break">
+      <div class="card-head"><h2>Domain profile vs target</h2></div>
+      <div class="chart-wrap" id="radarChart"></div>
+    </section>
+    <section class="card avoid-break">
+      <div class="card-head"><h2>Weighted domain scores</h2></div>
+      <div class="chart-wrap" id="domainBars"></div>
+      <ul class="legend-levels mt-16" id="levelLegend"></ul>
+    </section>
+  </div>
+
+  <section class="card avoid-break">
+    <div class="card-head">
+      <h2>Domain detail</h2>
+      <div class="spacer"></div>
+      <span class="card-note">Domain weight reflects its contribution to the overall score.</span>
+    </div>
+    <div class="table-wrap">
+      <table class="data" id="domainTable">
+        <thead>
+          <tr>
+            <th>Domain</th><th class="num">Weight</th><th class="num">Score</th><th class="num">Index</th>
+            <th>Level</th><th class="num">Gap to target</th><th class="num">Answered</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Priority improvement plan</h2>
+      <div class="spacer"></div>
+      <span class="card-note" id="actionSummary"></span>
+    </div>
+    <p class="card-note">Ranked by domain weight × control weight × distance from the target level. Priority 1 items carry the greatest weighted risk reduction.</p>
+    <div id="actionPlan"></div>
+  </section>
+
+  <section class="card avoid-break">
+    <div class="card-head"><h2>Established strengths</h2></div>
+    <div id="strengthsList"></div>
+  </section>
+
+  <!-- Sign-off block and full response log, printed as appendices -->
+  <section class="card print-only avoid-break" id="signoffCard">
+    <h2>Declaration &amp; sign-off</h2>
+    <p class="card-note">The respondent confirms that the responses reflect the entity's position at the assessment date and that supporting evidence can be produced on request.</p>
+    <table class="signoff">
+      <tr>
+        <th>Completed by</th><td id="signoffRespondent"></td>
+        <th>Signature</th><td class="sign-line"></td>
+        <th>Date</th><td class="sign-line"></td>
+      </tr>
+      <tr>
+        <th>Reviewed by</th><td id="signoffReviewer"></td>
+        <th>Signature</th><td class="sign-line"></td>
+        <th>Date</th><td class="sign-line"></td>
+      </tr>
+    </table>
+  </section>
+
+  <section class="card print-only page-break" id="appendixCard">
+    <h2>Appendix A · Full response log</h2>
+    <div id="answerAppendix"></div>
+  </section>
+</main>
+
+<!-- ============================ EXPORT & DATA ============================ -->
+<main class="view page" id="view-data" hidden>
+  <div class="card">
+    <div class="card-head"><h2>Export this assessment</h2></div>
+    <p class="card-note">The JSON file is the machine-readable record: load it into the sector dashboard, a BI tool or a data warehouse. The PDF is the human-readable report for sign-off.</p>
+    <div class="toolbar mt-16">
+      <button type="button" class="btn btn-primary" id="btnExportJSON">Download JSON</button>
+      <button type="button" class="btn btn-dark" id="btnPrintData">Export PDF report</button>
+      <button type="button" class="btn" id="btnExportCSV">Download CSV (answers)</button>
+      <button type="button" class="btn" id="btnCopyJSON">Copy JSON to clipboard</button>
+    </div>
+    <div class="callout mt-16" id="exportValidation"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Resume or review a saved assessment</h2></div>
+    <p class="card-note">Import a previously exported JSON file to continue editing it, or to reprint its report.</p>
+    <div class="dropzone" id="importDrop">
+      <strong>Drop a JSON assessment file here</strong><br />or click to choose a file
+      <input type="file" id="importFile" accept="application/json,.json" hidden />
+    </div>
+    <div class="toolbar mt-16">
+      <button type="button" class="btn btn-danger" id="btnReset">Clear form and start over</button>
+      <div class="spacer"></div>
+      <span class="status muted" id="storageNote"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>JSON preview</h2>
+      <div class="spacer"></div>
+      <span class="card-note">schema <span id="schemaVersionLabel"></span></span>
+    </div>
+    <pre id="jsonPreview" style="background:#0f172a;color:#e2e8f0;padding:14px;border-radius:8px;overflow:auto;max-height:460px;font-size:.78rem;line-height:1.5"></pre>
+  </div>
+</main>
+
+<div class="footer-bar no-print">
+  <span class="status" id="footerStatus">Loading…</span>
+  <span class="status muted" id="autosaveStatus"></span>
+  <div class="spacer"></div>
+  <button type="button" class="btn btn-sm" id="btnSaveNow">Save draft</button>
+  <button type="button" class="btn btn-sm btn-primary" id="btnFooterResults">Results</button>
+  <button type="button" class="btn btn-sm btn-dark" id="btnFooterExport">Export JSON</button>
+</div>
+
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script src="assets/js/framework.js"></script>
+<script src="assets/js/scoring.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/survey.js"></script>
+</body>
+</html>
