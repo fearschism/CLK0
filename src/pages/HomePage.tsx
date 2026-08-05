@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ClientMarquee } from "../components/ClientMarquee";
+import { CountUp } from "../components/CountUp";
 import { HeroDots } from "../components/HeroDots";
 import { Icon } from "../components/Icons";
 import { Reveal } from "../components/Reveal";
@@ -115,7 +116,7 @@ export function HomePage() {
                     <Icon name="people" />
                   </div>
                   <div>
-                    <strong>66</strong>
+                    <strong><CountUp end={66} /></strong>
                     <span>{t(copy.common.members)}</span>
                   </div>
                 </div>
@@ -124,7 +125,7 @@ export function HomePage() {
                     <Icon name="globe" />
                   </div>
                   <div>
-                    <strong>58</strong>
+                    <strong><CountUp end={58} /></strong>
                     <span>{t(copy.common.countries)}</span>
                   </div>
                 </div>
@@ -133,7 +134,7 @@ export function HomePage() {
                     <Icon name="pin" />
                   </div>
                   <div>
-                    <strong>266</strong>
+                    <strong><CountUp end={266} /></strong>
                     <span>{t(copy.common.hubs)}</span>
                   </div>
                 </div>
