@@ -339,6 +339,31 @@ async function main() {
 
   function expectedValue(v) { return v; }
 
+  /* ------------------- Resuming from a saved file ------------------- */
+  console.log('\nQuestionnaire — resuming from a saved data file');
+  const resumePage = await browser.newPage();
+  resumePage.on('pageerror', err => consoleErrors.push('resume: ' + String(err)));
+  await resumePage.goto(`${base}/index.html`, { waitUntil: 'networkidle0' });
+  await resumePage.evaluate(() => window.localStorage.clear());
+  await resumePage.reload({ waitUntil: 'networkidle0' });
+  check('a fresh questionnaire starts empty',
+    /0 of \d+ questions answered/.test(await resumePage.$eval('#progressText', el => el.textContent)));
+
+  await (await resumePage.$('#resumeFile')).uploadFile(join(artifacts, jsonFile));
+  await wait(800);
+  const resumed = await resumePage.evaluate(() => ({
+    progress: document.getElementById('progressText').textContent,
+    org: document.getElementById('entitySelect').value,
+    contact: document.getElementById('contactName').value,
+    step: [...document.querySelectorAll('#stepContainer .step')].find(s => !s.hasAttribute('hidden')).dataset.step
+  }));
+  check('loading a saved data file restores every answer',
+    /51 of 51 questions answered/.test(resumed.progress), resumed.progress);
+  check('loading a saved data file restores the organisation and contact',
+    resumed.org === 'E14' && resumed.contact === 'S. Haddad', JSON.stringify(resumed));
+  check('resuming lands the respondent on their details', resumed.step === 'details', resumed.step);
+  await resumePage.close();
+
   /* ------------------- Console ------------------- */
   console.log('\nConsole');
   const dash = await browser.newPage();

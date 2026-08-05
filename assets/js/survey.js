@@ -626,6 +626,46 @@
     setTimeout(function () { window.print(); }, 140);
   }
 
+  /** Pick up a return someone else started, from the data file they saved. */
+  function resumeFromFile(fileList) {
+    util.readJSONFiles(fileList).then(function (result) {
+      if (result.errors.length) {
+        toast(result.errors[0].file + ': ' + result.errors[0].error, 'err');
+        return;
+      }
+      var file = result.records[0] && result.records[0].data;
+      if (!file || typeof file !== 'object' || !file.answers) {
+        toast('That file is not a saved return. Look for the .json file downloaded from this questionnaire.', 'err');
+        return;
+      }
+      var major = String(file.schemaVersion || '').split('.')[0];
+      if (major && major !== String(AIMA.meta.schemaVersion).split('.')[0]) {
+        toast('That file came from an earlier version of this questionnaire, so it cannot be loaded.', 'err');
+        return;
+      }
+
+      state = Object.assign(newReturn(), {
+        id: file.id || util.uid('return'),
+        entity: Object.assign({ code: '', name: '', type: '', region: '', size: '' }, file.entity || {}),
+        contact: Object.assign({ contactName: '', contactRole: '', contactEmail: '', contactPhone: '', approverName: '' }, file.contact || {}),
+        submittedDate: file.submittedDate || util.todayISO(),
+        declarationConfirmed: !!file.declarationConfirmed,
+        answers: file.answers || {},
+        sectionNotes: file.sectionNotes || {},
+        createdAt: file.createdAt || new Date().toISOString()
+      });
+
+      writeDetailsToForm();
+      paintAllAnswers();
+      saveDraft(true);
+      renderPrintSummary();
+      refreshProgress();
+      showStep(1);
+      toast('Loaded the saved return for ' + (state.entity.name || 'your organisation') + ' — ' +
+        countAnswers() + ' of ' + AIMA.questionCount + ' questions already answered.', 'ok');
+    });
+  }
+
   function clearAll() {
     if (!window.confirm('Clear all answers and start again? Download your data file first if you want to keep them.')) return;
     state = newReturn();
@@ -774,6 +814,12 @@
     $('btnDownloadJSONTop').addEventListener('click', downloadJSON);
     $('btnClear').addEventListener('click', clearAll);
     $('btnBackToStart').addEventListener('click', function () { showStep(2); });
+
+    $('btnResume').addEventListener('click', function () { $('resumeFile').click(); });
+    $('resumeFile').addEventListener('change', function () {
+      if (this.files && this.files.length) resumeFromFile(this.files);
+      this.value = '';
+    });
 
     window.addEventListener('beforeprint', renderPrintSummary);
     // Safari does not fire beforeprint; it switches the print media query instead.
