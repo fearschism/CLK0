@@ -272,6 +272,15 @@ const barsSvg = charts.bars({ items: [{ label: 'A', value: 2 }, { label: 'B', va
 check('bars renders an svg', barsSvg.startsWith('<svg'));
 check('bars shows an em dash for a null value', barsSvg.includes('—'));
 check('bars draws the target line', barsSvg.includes('target 4'));
+check('short bar labels stay on one line', (barsSvg.match(/chart-row-label/g) || []).length === 2);
+
+const longLabel = 'Medical Device & Clinical System Protection';
+const wrapped = charts.bars({ items: [{ label: longLabel, sublabel: 'w 8%', value: 2 }] });
+check('long bar labels wrap onto two lines', (wrapped.match(/chart-row-label/g) || []).length === 2);
+check('wrapped labels break on a word boundary and lose no words',
+  longLabel.split(' ').every(word => wrapped.includes(word.replace(/&/g, '&amp;'))),
+  wrapped.slice(wrapped.indexOf('chart-row-label'), wrapped.indexOf('chart-row-label') + 220));
+check('wrapped labels keep the full text in a tooltip', wrapped.includes('<title>Medical Device &amp; Clinical System Protection</title>'));
 
 const heatSvg = charts.heatmap({
   cols: AIMA.domains.map(d => ({ label: d.id, title: d.name })),

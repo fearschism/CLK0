@@ -144,9 +144,23 @@ window.AIMA = window.AIMA || {};
       out += '<text x="' + (tx + 5).toFixed(1) + '" y="10" class="chart-tick-strong">target ' + opts.target + '</text>';
     }
 
-    // Row labels are plain SVG text, so trim them to the space actually available.
+    // Row labels are plain SVG text with no wrapping of their own, so lay them
+    // out over up to two lines to fit the space available.
     var labelSpace = labelWidth - 12 - (items.some(function (i) { return i.sublabel; }) ? 40 : 0);
     var maxChars = Math.max(12, Math.floor(labelSpace / 5.6));
+
+    function wrap(label) {
+      if (label.length <= maxChars) return [label];
+      var words = label.split(' ');
+      var first = '';
+      while (words.length && (first + ' ' + words[0]).trim().length <= maxChars) {
+        first = (first + ' ' + words.shift()).trim();
+      }
+      if (!first) first = label.slice(0, maxChars);
+      var second = words.join(' ');
+      if (second.length > maxChars) second = second.slice(0, maxChars - 1) + '…';
+      return second ? [first, second] : [first];
+    }
 
     items.forEach(function (item, i) {
       var y = 20 + i * rowHeight;
@@ -154,10 +168,16 @@ window.AIMA = window.AIMA || {};
       var barWidth = Math.max(value <= 0 ? 0 : 2, plotWidth * value / max);
       var color = item.color || colorForScore(value);
       var label = String(item.label);
-      var shown = label.length > maxChars ? label.slice(0, maxChars - 1) + '…' : label;
+      var lines = wrap(label);
 
-      out += '<text x="0" y="' + (y + barHeight - 3) + '" class="chart-row-label">' + esc(shown) +
-        (shown === label ? '' : '<title>' + esc(label) + '</title>') + '</text>';
+      if (lines.length === 1) {
+        out += '<text x="0" y="' + (y + barHeight - 3) + '" class="chart-row-label">' + esc(lines[0]) + '</text>';
+      } else {
+        out += '<text x="0" y="' + (y + 5) + '" class="chart-row-label">' + esc(lines[0]) +
+          '<title>' + esc(label) + '</title></text>';
+        out += '<text x="0" y="' + (y + 15) + '" class="chart-row-label">' + esc(lines[1]) +
+          '<title>' + esc(label) + '</title></text>';
+      }
       if (item.sublabel) {
         out += '<text x="' + (labelWidth - 8) + '" y="' + (y + barHeight - 3) + '" text-anchor="end" class="chart-row-sublabel">' +
           esc(item.sublabel) + '</text>';
