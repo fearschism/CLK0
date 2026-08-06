@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI in Cybersecurity — Maturity Return</title>
+<meta name="description" content="Bilingual return on how an organisation uses artificial intelligence across its cybersecurity work. Complete the questions, then save a PDF and a data file." />
+<!--@FAVICON-->
+<!--@STYLES-->
+</head>
+<body>
+
+<div class="classification-bar">
+  <span data-brand="classification">Official — Sensitive</span>
+  <span class="ar-in" data-brand="classification" data-lang="ar"></span>
+</div>
+
+<header class="site-header no-print">
+  <!--@LOGO-->
+  <div class="titles">
+    <div class="org">
+      <span data-brand="organisation">National Health Authority</span>
+      <span class="ar-in" data-brand="organisation" data-lang="ar"></span>
+    </div>
+    <h1>
+      <span class="en">AI in Cybersecurity — Maturity Return</span>
+      <span class="ar">استخدام الذكاء الاصطناعي في الأمن السيبراني — استبيان النضج</span>
+    </h1>
+    <div class="strap">
+      <span class="en" data-brand="directorate"></span>
+      <span class="ar" data-brand="directorate" data-lang="ar"></span>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="header-meta">
+    <strong data-brand="cycle"></strong>
+    <span data-brand="documentRef"></span><br />
+    <span class="en">Return by <span data-brand="returnDeadline"></span></span>
+    <span class="ar">الموعد النهائي: <span data-brand="returnDeadline" data-lang="ar"></span></span>
+  </div>
+</header>
+
+<div class="progress-strip no-print">
+  <span class="progress-text" id="progressText">0 / 0</span>
+  <div class="bar"><span id="progressBar"></span></div>
+  <span class="progress-text" id="progressPercent">0%</span>
+  <span class="saved" id="savedStatus"></span>
+  <div class="strip-actions">
+    <button type="button" class="btn btn-sm" id="btnSaveProgress">Save progress<span class="ar-in">حفظ التقدم</span></button>
+    <button type="button" class="btn btn-sm btn-dark" id="btnSavePDFTop">Save as PDF<span class="ar-in">حفظ PDF</span></button>
+    <button type="button" class="btn btn-sm btn-primary" id="btnDownloadJSONTop">Download data file<span class="ar-in">تنزيل ملف البيانات</span></button>
+  </div>
+</div>
+
+<!-- Letterhead for the printed PDF -->
+<div class="report-letterhead" id="printLetterhead">
+  <!--@LOGO-->
+  <div class="lh-body">
+    <div class="lh-org">
+      <span data-brand="organisation"></span>
+      <span class="ar-in" data-brand="organisation" data-lang="ar"></span>
+    </div>
+    <h1>
+      <span class="en">AI in Cybersecurity — Maturity Return</span>
+      <span class="ar">استخدام الذكاء الاصطناعي في الأمن السيبراني — استبيان النضج</span>
+    </h1>
+    <div class="lh-sub" id="printSubtitle"></div>
+    <div class="lh-meta" id="printMeta"></div>
+  </div>
+  <div class="lh-ref">
+    <span data-brand="documentRef"></span><br />
+    <span data-brand="cycle"></span>
+  </div>
+</div>
+
+<main class="page-narrow">
+  <div class="form-layout">
+
+    <aside class="step-nav no-print">
+      <div class="card">
+        <div class="card-head">
+          <h3><span class="en">Sections</span><span class="ar">الأقسام</span></h3>
+        </div>
+        <ol id="stepNav"></ol>
+      </div>
+    </aside>
+
+    <div>
+      <div id="stepContainer" class="screen-only">
+
+        <!-- ---------------------------- Step: intro ---------------------------- -->
+        <section class="card step" data-step="intro">
+          <h2><span class="en">Before you start</span><span class="ar">قبل أن تبدأ</span></h2>
+
+          <p>
+            <span class="en">Your organisation has been asked to complete this short return on how it uses artificial intelligence in its cybersecurity work — in the security operations centre, in governance and compliance, in resilience, and across the other security domains. It is part of the <strong data-brand="programme"></strong>.</span>
+            <span class="ar">طُلب من مؤسستكم استكمال هذا النموذج القصير حول كيفية استخدامها للذكاء الاصطناعي في أعمال الأمن السيبراني — في مركز العمليات الأمنية، وفي الحوكمة والامتثال، وفي الصمود السيبراني، وفي بقية مجالات الأمن. ويأتي ذلك ضمن <strong data-brand="programme" data-lang="ar"></strong>.</span>
+          </p>
+
+          <div class="callout">
+            <h4><span class="en">What you need to know</span><span class="ar">ما ينبغي معرفته</span></h4>
+            <ul>
+              <li>
+                <span class="en">There are <strong id="introQuestionCount">—</strong> questions and it takes about <strong id="introMinutes">—</strong> minutes.</span>
+                <span class="ar">يحتوي النموذج على <strong id="introQuestionCountAr">—</strong> سؤالاً ويستغرق نحو <strong id="introMinutesAr">—</strong> دقيقة.</span>
+              </li>
+              <li>
+                <span class="en">Most questions are <strong>Yes / No / Not sure</strong>, or a choice from a short list. Nothing needs to be written from scratch.</span>
+                <span class="ar">معظم الأسئلة بصيغة <strong>نعم / لا / غير متأكد</strong>، أو اختيار من قائمة قصيرة. ولا يتطلب أي سؤال كتابة نص من الصفر.</span>
+              </li>
+              <li>
+                <span class="en">Answer to the best of your knowledge. If you genuinely do not know, choose <strong>Not sure</strong> — that is more useful to us than a guess.</span>
+                <span class="ar">أجيبوا بأفضل ما لديكم من معلومات. وإذا لم تكونوا متأكدين فعلاً فاختاروا <strong>غير متأكد</strong>، فذلك أنفع لنا من التخمين.</span>
+              </li>
+              <li>
+                <span class="en">Your answers are saved in this browser as you go, so you can close the page and come back later.</span>
+                <span class="ar">تُحفظ إجاباتكم في هذا المتصفح أولاً بأول، فيمكنكم إغلاق الصفحة والعودة لاحقاً.</span>
+              </li>
+              <li>
+                <span class="en">This is a single file with nothing to install, and it works without an internet connection.</span>
+                <span class="ar">هذه الصفحة ملف واحد لا يحتاج إلى أي تثبيت، وتعمل دون اتصال بالإنترنت.</span>
+              </li>
+            </ul>
+          </div>
+
+          <h3 class="mt-16"><span class="en">Who should complete this</span><span class="ar">من ينبغي أن يكمل النموذج</span></h3>
+          <p>
+            <span class="en">The person responsible for security operations, with input from the SOC, the governance and compliance team, and IT where needed. A senior manager should approve the return before you send it.</span>
+            <span class="ar">الشخص المسؤول عن العمليات الأمنية، بمشاركة فريق مركز العمليات الأمنية وفريق الحوكمة والامتثال وتقنية المعلومات عند الحاجة. وينبغي أن يعتمد أحد كبار المسؤولين النموذج قبل إرساله.</span>
+          </p>
+
+          <h3><span class="en">What happens at the end</span><span class="ar">ماذا يحدث في النهاية</span></h3>
+          <p>
+            <span class="en">On the last page you save two files and send them to <a data-brand-mail href="#"></a> by <strong data-brand="returnDeadline"></strong>: a <strong>PDF</strong> of your completed return for your records and sign-off, and a <strong>data file</strong> (.json) that we load into our reporting system.</span>
+            <span class="ar">في الصفحة الأخيرة تحفظون ملفين وترسلونهما إلى <span data-brand="returnContact"></span> قبل <strong data-brand="returnDeadline" data-lang="ar"></strong>: ملف <strong>PDF</strong> للنموذج المكتمل لسجلاتكم وللاعتماد، وملف <strong>بيانات</strong> بصيغة .json نقوم بتحميله في نظام التقارير لدينا.</span>
+          </p>
+
+          <h3><span class="en">How your answers are used</span><span class="ar">كيف تُستخدم إجاباتكم</span></h3>
+          <p>
+            <span class="en">Answers are used to understand where the sector stands, to target support where it is needed, and to report on progress. They are handled as <span data-brand="classification"></span>. Please do not include passwords, patient details or system addresses in the comment boxes.</span>
+            <span class="ar">تُستخدم الإجابات لفهم وضع القطاع، ولتوجيه الدعم حيث يلزم، ولرفع التقارير عن التقدم. وتُعامل على أنها <span data-brand="classification" data-lang="ar"></span>. يُرجى عدم تضمين كلمات المرور أو بيانات المرضى أو عناوين الأنظمة في خانات الملاحظات.</span>
+          </p>
+
+          <div class="callout good mt-16">
+            <h4><span class="en">What the questions are based on</span><span class="ar">على أي أساس بُنيت الأسئلة</span></h4>
+            <p class="mb-0" id="introFrameworks">—</p>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn" id="btnResume">Continue from a saved data file<span class="ar-in">المتابعة من ملف محفوظ</span></button>
+            <input type="file" id="resumeFile" accept="application/json,.json" hidden />
+            <div class="spacer"></div>
+            <button type="button" class="btn btn-primary btn-lg" data-goto-next>Start<span class="ar-in">ابدأ</span></button>
+          </div>
+          <p class="card-note" style="margin-top:10px">
+            <span class="en">If a colleague started this return and sent you their data file, use <strong>Continue from a saved data file</strong> to pick up where they left off.</span>
+            <span class="ar">إذا بدأ أحد الزملاء هذا النموذج وأرسل إليكم ملف البيانات الخاص به، استخدموا <strong>المتابعة من ملف محفوظ</strong> لاستكمال ما توقف عنده.</span>
+          </p>
+        </section>
+
+        <!-- --------------------------- Step: details --------------------------- -->
+        <section class="card step" data-step="details" hidden>
+          <div class="step-heading">
+            <span class="step-count">2</span>
+            <h2><span class="en">About your organisation</span><span class="ar">بيانات مؤسستكم</span></h2>
+          </div>
+          <p class="step-intro">
+            <span class="en">So we know whose return this is and who to contact with questions.</span>
+            <span class="ar">لنعرف لمن يعود هذا النموذج ومن نتواصل معه عند وجود استفسار.</span>
+          </p>
+
+          <div class="mt-16">
+            <div class="field" id="field-entity">
+              <label for="entitySelect">
+                <span class="en">Your organisation <span class="req">*</span></span>
+                <span class="ar">مؤسستكم <span class="req">*</span></span>
+              </label>
+              <select id="entitySelect"></select>
+            </div>
+            <div class="field" id="field-entityName" hidden>
+              <label for="entityNameInput">
+                <span class="en">Organisation name <span class="req">*</span></span>
+                <span class="ar">اسم المؤسسة <span class="req">*</span></span>
+              </label>
+              <input type="text" id="entityNameInput" />
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="entityTypeSelect"><span class="en">Type of organisation</span><span class="ar">نوع المؤسسة</span></label>
+                <select id="entityTypeSelect"></select>
+              </div>
+              <div class="field">
+                <label for="regionSelect"><span class="en">Region</span><span class="ar">المنطقة</span></label>
+                <select id="regionSelect"></select>
+              </div>
+              <div class="field">
+                <label for="sizeSelect"><span class="en">Approximate size</span><span class="ar">الحجم التقريبي</span></label>
+                <select id="sizeSelect"></select>
+              </div>
+              <div class="field">
+                <label for="dateInput"><span class="en">Date completed</span><span class="ar">تاريخ الإكمال</span></label>
+                <input type="date" id="dateInput" />
+              </div>
+            </div>
+
+            <h3 class="mt-16"><span class="en">Who is completing this return</span><span class="ar">من يقوم بتعبئة النموذج</span></h3>
+            <div class="grid-2" id="contactFields"></div>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn" data-goto-prev>Back<span class="ar-in">رجوع</span></button>
+            <div class="spacer"></div>
+            <button type="button" class="btn btn-primary" data-goto-next>Continue<span class="ar-in">متابعة</span></button>
+          </div>
+        </section>
+
+        <!-- Question sections are inserted here by survey.js -->
+
+        <!-- --------------------------- Step: finish ---------------------------- -->
+        <section class="card step" data-step="finish" hidden>
+          <div class="step-heading">
+            <span class="step-count">✓</span>
+            <h2><span class="en">Save and send your return</span><span class="ar">حفظ النموذج وإرساله</span></h2>
+          </div>
+
+          <div id="finishStatus" class="mt-16"></div>
+
+          <div class="field mt-16" style="margin-top:20px">
+            <label class="check" id="declarationWrap" style="max-width:700px">
+              <input type="checkbox" id="declarationCheck" />
+              <span class="box"></span>
+              <span>
+                <span class="en">I confirm that these answers are accurate to the best of my knowledge, and that a senior manager in my organisation has approved this return.</span>
+                <span class="ar">أقر بأن هذه الإجابات صحيحة على حد علمي، وأن أحد كبار المسؤولين في مؤسستي قد اعتمد هذا النموذج.</span>
+              </span>
+            </label>
+          </div>
+
+          <ol class="finish-steps mt-16">
+            <li>
+              <h4><span class="en">Save your return as a PDF</span><span class="ar">احفظوا النموذج بصيغة PDF</span></h4>
+              <p>
+                <span class="en">This opens your browser's print window. Choose <strong>Save as PDF</strong> as the destination, then save the file.</span>
+                <span class="ar">سيفتح هذا نافذة الطباعة في متصفحكم. اختاروا <strong>حفظ بصيغة PDF</strong> كوجهة ثم احفظوا الملف.</span>
+              </p>
+              <button type="button" class="btn btn-dark" id="btnSavePDF">Save as PDF<span class="ar-in">حفظ بصيغة PDF</span></button>
+            </li>
+            <li>
+              <h4><span class="en">Download the data file</span><span class="ar">نزّلوا ملف البيانات</span></h4>
+              <p>
+                <span class="en">A small <code>.json</code> file containing your answers. We load this into our reporting system — please do not edit it.</span>
+                <span class="ar">ملف <code>.json</code> صغير يحتوي على إجاباتكم. نقوم بتحميله في نظام التقارير لدينا — يُرجى عدم تعديله.</span>
+              </p>
+              <button type="button" class="btn btn-primary" id="btnDownloadJSON">Download data file<span class="ar-in">تنزيل ملف البيانات</span></button>
+            </li>
+            <li>
+              <h4><span class="en">Send both files to us</span><span class="ar">أرسلوا الملفين إلينا</span></h4>
+              <p>
+                <span class="en">Email the PDF and the data file to <a data-brand-mail href="#"></a> by <strong data-brand="returnDeadline"></strong>.</span>
+                <span class="ar">أرسلوا ملف PDF وملف البيانات إلى <span data-brand="returnContact"></span> قبل <strong data-brand="returnDeadline" data-lang="ar"></strong>.</span>
+              </p>
+              <p class="mb-0 card-note">
+                <span class="en" data-brand="returnInstructions"></span>
+                <span class="ar" data-brand="returnInstructions" data-lang="ar"></span>
+              </p>
+            </li>
+          </ol>
+
+          <div class="card-head mt-16" style="margin-top:26px">
+            <h3><span class="en">Check your answers</span><span class="ar">مراجعة الإجابات</span></h3>
+            <div class="spacer"></div>
+            <button type="button" class="btn btn-sm" id="btnBackToStart">Go to the first section<span class="ar-in">القسم الأول</span></button>
+          </div>
+          <div class="table-wrap">
+            <table class="review-table" id="reviewTable"><tbody></tbody></table>
+          </div>
+
+          <div class="step-actions">
+            <button type="button" class="btn" data-goto-prev>Back<span class="ar-in">رجوع</span></button>
+            <div class="spacer"></div>
+            <span class="status muted" id="entityStatus"></span>
+            <button type="button" class="btn btn-danger btn-sm" id="btnClear">Clear all answers<span class="ar-in">مسح الإجابات</span></button>
+          </div>
+        </section>
+      </div>
+
+      <!-- ------------------- Printed version of the return ------------------- -->
+      <div class="print-only" id="printSummary"></div>
+    </div>
+  </div>
+</main>
+
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<!--@SCRIPTS-->
+</body>
+</html>

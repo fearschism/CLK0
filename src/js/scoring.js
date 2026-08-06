@@ -3,14 +3,13 @@
  * -----------------------------------
  * Turns plain answers into a comparable rating. Respondents never see any of
  * this: the questionnaire asks "Yes / No / Not sure" or offers a list, and the
- * score for each option lives in framework.js.
+ * value behind each option lives in framework.js.
  *
  * Answer shapes stored in a return file:
  *   yesno   { value: 'yes' | 'no' | 'unsure' | 'na' }
  *   choice  { value: '<option value>' | 'na' }
  *   multi   { value: ['<option value>', ...] }   // ['none'] means none of them
  *   number  { value: 12 }
- *   text    { value: 'free text' }
  */
 window.AIMA = window.AIMA || {};
 
@@ -18,29 +17,25 @@ window.AIMA = window.AIMA || {};
   'use strict';
 
   var NA = AIMA.NOT_APPLICABLE;
-  var NONE = 'none';
+  var NONE = AIMA.answers.NONE;
+
+  // Reading answers back is shared with the questionnaire; only the values,
+  // weights and bands below are specific to the governing body.
+  var isAnswered = AIMA.answers.isAnswered;
+  var answerKeys = AIMA.answers.answerKeys;
+  var describeAnswer = AIMA.answers.describeAnswer;
+  var describeAnswerBoth = AIMA.answers.describeAnswerBoth;
+
+  /** English rendering of a bilingual string, for sorting, keys and CSV. */
+  function en(value) { return AIMA.t(value, 'en'); }
 
   function round(value, dp) {
     var f = Math.pow(10, dp === undefined ? 2 : dp);
     return Math.round(value * f) / f;
   }
 
-  function isBlank(value) {
-    return value === undefined || value === null || value === '' ||
-      (Array.isArray(value) && value.length === 0);
-  }
-
-  /** Has the respondent given any answer at all? Drives the progress bar. */
-  function isAnswered(question, answer) {
-    if (!answer) return false;
-    if (question.type === 'number') {
-      return answer.value !== '' && answer.value !== null && answer.value !== undefined && !isNaN(Number(answer.value));
-    }
-    return !isBlank(answer.value);
-  }
-
   /**
-   * Score for one answer: a number 0-5, the string 'na', or null when the
+   * Value for one answer: a number 0-5, the string 'na', or null when the
    * question is unanswered or does not contribute to the rating.
    */
   function scoreAnswer(question, answer) {
@@ -83,39 +78,6 @@ window.AIMA = window.AIMA || {};
     }
 
     return null;
-  }
-
-  /** Plain-language rendering of an answer, used in printouts and the console. */
-  function describeAnswer(question, answer) {
-    if (!isAnswered(question, answer)) return 'Not answered';
-    var value = answer.value;
-
-    if (question.type === 'multi') {
-      if (value.indexOf(NA) !== -1) return 'Not applicable';
-      if (value.indexOf(NONE) !== -1) return question.noneLabel || 'None of these';
-      var labels = (question.options || [])
-        .filter(function (o) { return value.indexOf(o.value) !== -1; })
-        .map(function (o) { return o.label; });
-      return labels.length ? labels.join('; ') : 'Not answered';
-    }
-
-    if (value === NA) return 'Not applicable';
-
-    if (question.type === 'yesno') {
-      var yn = AIMA.yesNoOptions.filter(function (o) { return o.value === value; })[0];
-      return yn ? yn.label : String(value);
-    }
-
-    if (question.type === 'choice') {
-      var option = (question.options || []).filter(function (o) { return o.value === value; })[0];
-      return option ? option.label : String(value);
-    }
-
-    if (question.type === 'number') {
-      return String(value) + (question.unit ? ' ' + question.unit : '');
-    }
-
-    return String(value);
   }
 
   function levelFor(score) {
@@ -179,7 +141,6 @@ window.AIMA = window.AIMA || {};
     };
   }
 
-  /** Improvement actions for every scored answer below the target. */
   function buildActions(answers, targetLevel) {
     var target = targetLevel || AIMA.defaultTargetLevel;
     var actions = [];
@@ -198,7 +159,7 @@ window.AIMA = window.AIMA || {};
         sectionId: question.sectionId,
         sectionTitle: question.sectionTitle,
         question: question.text,
-        answer: describeAnswer(question, answers[question.id]),
+        answer: describeAnswerBoth(question, answers[question.id]),
         action: question.remedy,
         score: round(result, 2),
         target: target,
@@ -223,10 +184,11 @@ window.AIMA = window.AIMA || {};
       if (result === null || result === NA || result < 4) return;
       strengths.push({
         questionId: question.id,
+        questionNumber: question.number,
         sectionId: question.sectionId,
         sectionTitle: question.sectionTitle,
         question: question.text,
-        answer: describeAnswer(question, answers[question.id]),
+        answer: describeAnswerBoth(question, answers[question.id]),
         score: round(result, 2)
       });
     });
@@ -234,7 +196,6 @@ window.AIMA = window.AIMA || {};
     return strengths;
   }
 
-  /** Everything the console needs about one return. */
   function computeResults(record) {
     var answers = (record && record.answers) || {};
     var targetLevel = (record && record.targetLevel) || AIMA.defaultTargetLevel;
@@ -323,14 +284,20 @@ window.AIMA = window.AIMA || {};
       return {
         id: record.id,
         entityCode: (record.entity && record.entity.code) || '—',
-        entityName: (record.entity && record.entity.name) || 'Unnamed organisation',
+        entityName: (record.entity && record.entity.name) || AIMA.T('Unnamed organisation', 'مؤسسة بدون اسم'),
         entityType: (record.entity && record.entity.type) || '—',
         region: (record.entity && record.entity.region) || '—',
         size: (record.entity && record.entity.size) || '—',
+        // English forms, for sorting, filtering and CSV columns.
+        entityNameEn: en((record.entity && record.entity.name) || 'Unnamed organisation'),
+        entityTypeEn: en((record.entity && record.entity.type) || '—'),
+        regionEn: en((record.entity && record.entity.region) || '—'),
+        levelNameEn: en(results.overall.levelName || ''),
         period: record.period || '—',
         submittedDate: record.submittedDate || '—',
         contactName: (record.contact && record.contact.contactName) || '—',
         contactRole: (record.contact && record.contact.contactRole) || '',
+        declarationConfirmed: !!record.declarationConfirmed,
         targetLevel: results.targetLevel,
         score: results.overall.score,
         percent: results.overall.percent,
@@ -385,7 +352,6 @@ window.AIMA = window.AIMA || {};
       };
     });
 
-    // Per-question view, including how the answers were distributed.
     var questionStats = AIMA.allQuestions.map(function (question) {
       var values = [];
       var distribution = {};
@@ -396,10 +362,9 @@ window.AIMA = window.AIMA || {};
         var answer = row.answers[question.id];
         if (!isAnswered(question, answer)) return;
         responses++;
-        var label = describeAnswer(question, answer);
-        if (question.type === 'yesno' || question.type === 'choice') {
-          distribution[label] = (distribution[label] || 0) + 1;
-        }
+        answerKeys(question, answer).forEach(function (key) {
+          distribution[key] = (distribution[key] || 0) + 1;
+        });
         var result = scoreAnswer(question, answer);
         if (result === NA) { naCount++; return; }
         if (result !== null) values.push(result);
@@ -428,11 +393,14 @@ window.AIMA = window.AIMA || {};
     function groupBy(key) {
       var map = {};
       scored.forEach(function (row) {
-        var k = row[key] || '—';
-        (map[k] = map[k] || []).push(row.score);
+        var label = row[key];
+        var k = en(label) || '—';
+        if (!map[k]) map[k] = { key: label, count: 0, scores: [] };
+        map[k].count++;
+        map[k].scores.push(row.score);
       });
       return Object.keys(map).sort().map(function (k) {
-        return { key: k, count: map[k].length, avg: mean(map[k]) };
+        return { key: map[k].key, count: map[k].count, avg: mean(map[k].scores) };
       });
     }
 
@@ -441,6 +409,7 @@ window.AIMA = window.AIMA || {};
       row.actions.forEach(function (action) {
         var bucket = commonActions[action.questionId] || (commonActions[action.questionId] = {
           questionId: action.questionId,
+          questionNumber: action.questionNumber,
           sectionId: action.sectionId,
           action: action.action,
           entities: 0,
@@ -495,7 +464,6 @@ window.AIMA = window.AIMA || {};
     };
   }
 
-  /** How many questions map to each reference framework. */
   function frameworkCoverage() {
     return AIMA.frameworks.map(function (framework) {
       var questions = AIMA.allQuestions.filter(function (q) {
@@ -517,7 +485,9 @@ window.AIMA = window.AIMA || {};
   AIMA.scoring = {
     isAnswered: isAnswered,
     scoreAnswer: scoreAnswer,
+    answerKeys: answerKeys,
     describeAnswer: describeAnswer,
+    describeAnswerBoth: describeAnswerBoth,
     levelFor: levelFor,
     toPercent: toPercent,
     scoreSection: scoreSection,
@@ -528,6 +498,7 @@ window.AIMA = window.AIMA || {};
     round: round,
     mean: mean,
     median: median,
+    en: en,
     NONE: NONE
   };
 })(window.AIMA);

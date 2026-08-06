@@ -28,8 +28,39 @@
   --shadow-sm: 0 1px 2px rgba(18, 62, 92, .07), 0 1px 3px rgba(18, 62, 92, .05);
   --shadow-md: 0 6px 20px rgba(18, 62, 92, .1);
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-ar: "Noto Naskh Arabic", "Noto Sans Arabic", "Geeza Pro", "Segoe UI", Tahoma, Arial, sans-serif;
   --classbar-height: 22px;
 }
+
+/* ---------- Bilingual text ----------
+   Every visible string appears in English and Arabic together. English runs
+   left to right in the document flow; Arabic is isolated, right aligned and
+   set in an Arabic face so the two never fight over direction. */
+
+.ar {
+  display: block;
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: isolate;
+  font-family: var(--font-ar);
+  line-height: 1.85;
+}
+.en { display: block; }
+.ar:lang(ar) { font-feature-settings: "liga" 1; }
+
+/* Inline Arabic, for short labels sharing a line with English.
+   The margin is physical on purpose: `inline-start` would resolve to the right
+   edge inside an RTL run and leave the two languages touching. */
+.ar-in {
+  direction: rtl;
+  unicode-bidi: isolate;
+  font-family: var(--font-ar);
+  margin-left: 9px;
+  opacity: .9;
+}
+
+/* Arabic that should read as the quieter of the pair (hints, captions). */
+.ar-soft { color: var(--muted); }
 
 * { box-sizing: border-box; }
 html {
@@ -101,8 +132,13 @@ li { margin-bottom: .25em; }
   font-size: .74rem; text-transform: uppercase; letter-spacing: 1.3px;
   color: rgba(255, 255, 255, .8); font-weight: 700;
 }
-.site-header h1 { color: #fff; font-size: 1.12rem; margin: 1px 0 2px; }
-.site-header .strap { font-size: .82rem; color: rgba(255, 255, 255, .78); }
+.site-header .org .ar-in { text-transform: none; letter-spacing: 0; font-size: .84rem; }
+.site-header h1 { color: #fff; font-size: 1.1rem; margin: 2px 0 3px; }
+.site-header h1 .ar { font-size: 1.02rem; font-weight: 600; }
+.site-header .strap { font-size: .8rem; color: rgba(255, 255, 255, .78); }
+.site-header .strap .ar { color: rgba(255, 255, 255, .72); }
+.site-header .titles { flex: 1 1 340px; }
+.site-header .titles .ar { text-align: left; }
 .site-header .spacer { flex: 1 1 auto; }
 .site-header .header-meta { text-align: right; font-size: .76rem; color: rgba(255, 255, 255, .8); line-height: 1.5; }
 .site-header .header-meta strong { color: #fff; display: block; font-size: .84rem; }
@@ -267,7 +303,9 @@ textarea { min-height: 84px; resize: vertical; }
 .q.answered .q-number { background: var(--brand-accent); }
 .q-body { flex: 1 1 auto; min-width: 0; }
 .q-text { display: block; font-size: 1rem; font-weight: 600; color: var(--ink); }
+.q-text .ar { margin-top: 3px; }
 .q-hint { color: var(--muted); font-size: .86rem; margin: 5px 0 0; }
+.q-hint .ar { margin-top: 1px; }
 .q-input { margin: 13px 0 0 44px; }
 @media (max-width: 640px) { .q-input { margin-left: 0; } }
 
@@ -292,7 +330,15 @@ textarea { min-height: 84px; resize: vertical; }
 .opt.selected .tick { border-color: var(--brand-accent-dark); }
 .opt.selected .tick::after { background: var(--brand-accent-dark); }
 .opt input:focus-visible + .tick { outline: 3px solid rgba(14, 139, 125, .35); outline-offset: 2px; }
-.opt.opt-na { min-width: 132px; }
+.opt .ar-in { font-size: .95em; }
+.opt.opt-na { min-width: 150px; }
+.check .ar { margin-top: 2px; font-size: .97em; }
+.step-nav .label .ar { font-size: .92em; margin-top: 1px; }
+.step-heading h2 .ar { font-size: 1.05rem; margin-top: 2px; }
+.step-intro .ar { margin-top: 3px; }
+.callout .ar, .card-note .ar { margin-top: 3px; }
+.finish-steps h4 .ar { font-weight: 600; font-size: .95em; }
+.field > label .ar-in { font-weight: 500; }
 .opt.opt-na.selected { border-color: var(--muted); background: #eef1f5; color: #475569; }
 .opt.opt-na.selected .tick { border-color: #475569; }
 .opt.opt-na.selected .tick::after { background: #475569; }
@@ -351,6 +397,7 @@ textarea { min-height: 84px; resize: vertical; }
 }
 .review-table .missing { color: var(--danger); font-weight: 700; }
 .review-table .qnum { color: var(--muted); font-weight: 600; margin-right: 6px; }
+.review-table .ar { font-size: .95em; margin-top: 2px; }
 
 .finish-steps { counter-reset: fin; list-style: none; padding: 0; margin: 0; }
 .finish-steps li {
@@ -552,7 +599,10 @@ table.signoff td.sign-line { min-width: 100px; }
     font-size: 8.4pt; text-transform: uppercase; letter-spacing: 1.2px;
     color: var(--brand-primary); font-weight: 700;
   }
-  .report-letterhead h1 { font-size: 15pt; margin: 1mm 0 .6mm; }
+  .ar { line-height: 1.7; }
+  .report-letterhead h1 { font-size: 14pt; margin: 1mm 0 .6mm; }
+  .report-letterhead h1 .ar { font-size: 12.5pt; }
+  .report-letterhead .lh-org .ar-in { font-size: 8.6pt; }
   .report-letterhead .lh-sub { font-size: 9.4pt; color: #475569; }
   .report-letterhead .lh-meta { font-size: 8.2pt; color: #64748b; margin-top: 1.6mm; line-height: 1.45; }
   .report-letterhead .lh-ref { text-align: right; font-size: 8pt; color: #64748b; white-space: nowrap; }

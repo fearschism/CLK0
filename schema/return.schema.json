@@ -1,8 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.org/schema/ai-cyber-assurance-return-2.0.0.json",
+  "$id": "https://example.org/schema/ai-cyber-assurance-return-3.0.0.json",
   "title": "AI Cyber Assurance Return — data file",
   "description": "One completed questionnaire from one reporting organisation, produced by the Download data file button. The file holds answers only: ratings are derived later in the governing body console, so nothing in this file reveals how answers are scored.",
+  "definitions": {
+    "bilingual": {
+      "type": "object",
+      "description": "The same text in English and Arabic.",
+      "required": ["en", "ar"],
+      "properties": {
+        "en": { "type": "string" },
+        "ar": { "type": "string" }
+      }
+    }
+  },
   "type": "object",
   "required": [
     "schemaVersion",
@@ -19,13 +30,13 @@
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "description": "Version of this file format. The console accepts 2.x.",
-      "examples": ["2.0.0"]
+      "description": "Version of this file format. The console accepts 3.x.",
+      "examples": ["3.0.0"]
     },
     "frameworkVersion": {
       "type": "string",
       "description": "Version of the question set used to produce this return.",
-      "examples": ["2026.2"]
+      "examples": ["2026.3"]
     },
     "returnTitle": { "type": "string" },
     "programme": { "type": "string", "description": "Programme the return belongs to, taken from branding.js." },
@@ -45,12 +56,13 @@
     "entity": {
       "type": "object",
       "required": ["code", "name"],
+      "description": "Names and classifications are bilingual objects, so a report can be produced in either language from the same file.",
       "properties": {
         "code": { "type": "string", "description": "Register code such as E01, or OTHER when not on the register." },
-        "name": { "type": "string" },
-        "type": { "type": "string" },
-        "region": { "type": "string" },
-        "size": { "type": "string" }
+        "name": { "$ref": "#/definitions/bilingual" },
+        "type": { "$ref": "#/definitions/bilingual" },
+        "region": { "$ref": "#/definitions/bilingual" },
+        "size": { "$ref": "#/definitions/bilingual" }
       }
     },
 
@@ -68,7 +80,7 @@
     "answers": {
       "type": "object",
       "description": "One entry per answered question, keyed by question id such as A1 or D3. Unanswered questions are absent.",
-      "propertyNames": { "pattern": "^[A-J][0-9]+$" },
+      "propertyNames": { "pattern": "^[A-L][0-9]+$" },
       "additionalProperties": {
         "type": "object",
         "required": ["value"],
@@ -93,7 +105,7 @@
     "sectionNotes": {
       "type": "object",
       "description": "Optional free-text comments keyed by section letter.",
-      "propertyNames": { "pattern": "^[A-J]$" },
+      "propertyNames": { "pattern": "^[A-L]$" },
       "additionalProperties": { "type": "string" }
     },
 

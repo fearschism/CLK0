@@ -1,20 +1,22 @@
 /*
- * Questionnaire page (the version sent to reporting organisations)
- * ---------------------------------------------------------------
- * Renders the question bank as a plain stepped form. It deliberately shows no
- * scores, weights, maturity levels or benchmarks: respondents answer, save a
+ * Questionnaire page (the single file sent to reporting organisations)
+ * -------------------------------------------------------------------
+ * Renders the question bank as a plain stepped form in English and Arabic
+ * together. It shows no scores, weights or ratings: respondents answer, save a
  * PDF and download a data file. All rating happens later in the console.
  */
 (function (AIMA) {
   'use strict';
 
   var util = AIMA.util;
-  var scoring = AIMA.scoring;
+  var answers = AIMA.answers;
   var esc = util.escapeHTML;
+  var t = AIMA.t;
+  var ui = AIMA.ui;
   var NA = AIMA.NOT_APPLICABLE;
-  var NONE = scoring.NONE;
+  var NONE = answers.NONE;
 
-  var STORAGE_KEY = 'aima.return.draft.v2';
+  var STORAGE_KEY = 'aima.return.draft.v3';
   var CUSTOM_ENTITY = '__other__';
 
   var state = newReturn();
@@ -22,12 +24,33 @@
   var currentStep = 0;
   var saveTimer = null;
 
+  /* ---------- bilingual rendering helpers ---------- */
+
+  /** English and Arabic stacked, for anything with room for two lines. */
+  function bi(value) {
+    return '<span class="en">' + esc(t(value, 'en')) + '</span>' +
+      '<span class="ar">' + esc(t(value, 'ar')) + '</span>';
+  }
+
+  /** English and Arabic on one line, for buttons and short labels. */
+  function biInline(value) {
+    return esc(t(value, 'en')) + '<span class="ar-in">' + esc(t(value, 'ar')) + '</span>';
+  }
+
+  /** Both languages in one plain string, for <option> and printed cells. */
+  function biPlain(value, separator) {
+    var en = t(value, 'en');
+    var ar = t(value, 'ar');
+    if (!ar || ar === en) return en;
+    return en + (separator || ' — ') + ar;
+  }
+
   function newReturn() {
     return {
       id: util.uid('return'),
       schemaVersion: AIMA.meta.schemaVersion,
       frameworkVersion: AIMA.meta.frameworkVersion,
-      entity: { code: '', name: '', type: '', region: '', size: '' },
+      entity: { code: '', name: null, type: null, region: null, size: null },
       contact: { contactName: '', contactRole: '', contactEmail: '', contactPhone: '', approverName: '' },
       submittedDate: util.todayISO(),
       declarationConfirmed: false,
@@ -44,13 +67,13 @@
     var stack = $('toastStack');
     var el = document.createElement('div');
     el.className = 'toast' + (kind ? ' ' + kind : '');
-    el.textContent = message;
+    el.innerHTML = bi(message);
     stack.appendChild(el);
     setTimeout(function () {
       el.style.opacity = '0';
       el.style.transition = 'opacity .25s';
       setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 260);
-    }, 3600);
+    }, 4200);
   }
 
   /* ------------------------------------------------------------------ *
@@ -58,37 +81,46 @@
    * ------------------------------------------------------------------ */
 
   function fillSelect(select, values, placeholder) {
-    var html = placeholder ? '<option value="">' + esc(placeholder) + '</option>' : '';
-    values.forEach(function (v) {
-      var value = typeof v === 'string' ? v : v.value;
-      var label = typeof v === 'string' ? v : v.label;
-      html += '<option value="' + esc(value) + '">' + esc(label) + '</option>';
+    var html = placeholder ? '<option value="">' + esc(biPlain(placeholder)) + '</option>' : '';
+    values.forEach(function (item) {
+      html += '<option value="' + esc(item.value) + '">' + esc(item.label) + '</option>';
     });
     select.innerHTML = html;
   }
 
   function buildIntro() {
     $('introQuestionCount').textContent = AIMA.questionCount;
+    $('introQuestionCountAr').textContent = AIMA.questionCount;
     $('introMinutes').textContent = AIMA.meta.estimatedMinutes;
+    $('introMinutesAr').textContent = AIMA.meta.estimatedMinutes;
     $('introFrameworks').innerHTML = AIMA.frameworks.map(function (f) {
-      return '<strong>' + esc(f.short) + '</strong> (' + esc(f.publisher) + ', ' + f.year + ')';
+      return '<strong>' + esc(f.short) + '</strong>';
     }).join(' &nbsp;·&nbsp; ');
   }
 
   function buildDetailsStep() {
     var entityOptions = AIMA.entities.map(function (e) {
-      return { value: e.code, label: e.code + ' — ' + e.name };
+      return { value: e.code, label: e.code + ' — ' + biPlain(e.name) };
     });
-    entityOptions.push({ value: CUSTOM_ENTITY, label: 'Other — not in this list' });
-    fillSelect($('entitySelect'), entityOptions, 'Choose your organisation…');
-    fillSelect($('entityTypeSelect'), AIMA.entityTypes, 'Not sure / not listed');
-    fillSelect($('regionSelect'), AIMA.regions, 'Not sure / not listed');
-    fillSelect($('sizeSelect'), AIMA.entitySizes, 'Prefer not to say');
+    entityOptions.push({ value: CUSTOM_ENTITY, label: biPlain(ui.otherOrganisation) });
+    fillSelect($('entitySelect'), entityOptions, ui.chooseOrganisation);
+
+    fillSelect($('entityTypeSelect'), AIMA.entityTypes.map(function (v) {
+      return { value: t(v, 'en'), label: biPlain(v) };
+    }), ui.notListed);
+    fillSelect($('regionSelect'), AIMA.regions.map(function (v) {
+      return { value: t(v, 'en'), label: biPlain(v) };
+    }), ui.notListed);
+    fillSelect($('sizeSelect'), AIMA.entitySizes.map(function (v) {
+      return { value: t(v, 'en'), label: biPlain(v) };
+    }), ui.preferNotToSay);
 
     $('contactFields').innerHTML = AIMA.respondentFields.map(function (field) {
       return '<div class="field" id="field-' + field.id + '">' +
-        '<label for="' + field.id + '">' + esc(field.label) +
-        (field.required ? ' <span class="req">*</span>' : '') + '</label>' +
+        '<label for="' + field.id + '">' +
+        '<span class="en">' + esc(t(field.label, 'en')) + (field.required ? ' <span class="req">*</span>' : '') + '</span>' +
+        '<span class="ar">' + esc(t(field.label, 'ar')) + (field.required ? ' <span class="req">*</span>' : '') + '</span>' +
+        '</label>' +
         '<input type="' + (field.type === 'email' ? 'email' : 'text') + '" id="' + field.id + '" />' +
         '</div>';
     }).join('');
@@ -98,8 +130,8 @@
     var html = '<div class="q" id="q-' + question.id + '" data-qid="' + question.id + '">';
     html += '<div class="q-head">';
     html += '<div class="q-number">' + question.number + '</div>';
-    html += '<div class="q-body"><label class="q-text" for="input-' + question.id + '">' + esc(question.text) + '</label>';
-    if (question.hint) html += '<p class="q-hint">' + esc(question.hint) + '</p>';
+    html += '<div class="q-body"><span class="q-text">' + bi(question.text) + '</span>';
+    if (question.hint) html += '<div class="q-hint">' + bi(question.hint) + '</div>';
     html += '</div></div>';
     html += '<div class="q-input">' + inputHTML(question) + '</div>';
     return html + '</div>';
@@ -109,36 +141,36 @@
     var options = AIMA.optionsFor(question);
 
     if (question.type === 'yesno') {
-      return '<div class="opt-row" role="radiogroup" aria-label="' + esc(question.text) + '">' +
+      return '<div class="opt-row" role="radiogroup" aria-label="' + esc(t(question.text, 'en')) + '">' +
         options.map(function (option) {
-          return '<label class="opt' + (option.value === NA ? ' opt-na' : '') + '" data-opt="' + question.id + '|' + option.value + '">' +
+          return '<label class="opt' + (option.value === NA ? ' opt-na' : '') + '">' +
             '<input type="radio" name="' + question.id + '" value="' + esc(option.value) + '" data-qid="' + question.id + '" />' +
-            '<span class="tick" aria-hidden="true"></span><span>' + esc(option.label) + '</span></label>';
+            '<span class="tick" aria-hidden="true"></span><span>' + biInline(option.label) + '</span></label>';
         }).join('') + '</div>';
     }
 
     if (question.type === 'choice') {
       return '<select id="input-' + question.id + '" data-qid="' + question.id + '" data-kind="choice">' +
-        '<option value="">Choose an answer…</option>' +
+        '<option value="">' + esc(biPlain(ui.chooseAnswer)) + '</option>' +
         options.map(function (option) {
-          return '<option value="' + esc(option.value) + '">' + esc(option.label) + '</option>';
+          return '<option value="' + esc(option.value) + '">' + esc(biPlain(option.label)) + '</option>';
         }).join('') + '</select>';
     }
 
     if (question.type === 'multi') {
       var html = '<div class="check-list">';
       html += options.filter(function (o) { return o.value !== NA; }).map(function (option) {
-        return '<label class="check" data-opt="' + question.id + '|' + option.value + '">' +
+        return '<label class="check">' +
           '<input type="checkbox" name="' + question.id + '" value="' + esc(option.value) + '" data-qid="' + question.id + '" data-kind="multi" />' +
-          '<span class="box" aria-hidden="true"></span><span>' + esc(option.label) + '</span></label>';
+          '<span class="box" aria-hidden="true"></span><span>' + bi(option.label) + '</span></label>';
       }).join('');
-      html += '<label class="check check-none" data-opt="' + question.id + '|' + NONE + '">' +
+      html += '<label class="check check-none">' +
         '<input type="checkbox" name="' + question.id + '" value="' + NONE + '" data-qid="' + question.id + '" data-kind="multi" />' +
-        '<span class="box" aria-hidden="true"></span><span>' + esc(question.noneLabel || 'None of these') + '</span></label>';
+        '<span class="box" aria-hidden="true"></span><span>' + bi(question.noneLabel || ui.notApplicable) + '</span></label>';
       if (question.allowNA) {
-        html += '<label class="check check-none" data-opt="' + question.id + '|' + NA + '">' +
+        html += '<label class="check check-none">' +
           '<input type="checkbox" name="' + question.id + '" value="' + NA + '" data-qid="' + question.id + '" data-kind="multi" />' +
-          '<span class="box" aria-hidden="true"></span><span>Not applicable</span></label>';
+          '<span class="box" aria-hidden="true"></span><span>' + bi(ui.notApplicable) + '</span></label>';
       }
       return html + '</div>';
     }
@@ -146,7 +178,7 @@
     if (question.type === 'number') {
       return '<div class="number-row">' +
         '<input type="number" min="0" step="1" id="input-' + question.id + '" data-qid="' + question.id + '" data-kind="number" />' +
-        (question.unit ? '<span class="unit">' + esc(question.unit) + '</span>' : '') + '</div>';
+        (question.unit ? '<span class="unit">' + esc(biPlain(question.unit, ' / ')) + '</span>' : '') + '</div>';
     }
 
     return '<textarea id="input-' + question.id + '" data-qid="' + question.id + '" data-kind="text"></textarea>';
@@ -163,25 +195,25 @@
       el.setAttribute('hidden', '');
 
       var html = '<div class="step-heading">' +
-        '<span class="step-count">Section ' + (index + 2) + '</span>' +
-        '<h2>' + esc(section.title) + '</h2></div>';
-      if (section.intro) html += '<p class="step-intro">' + esc(section.intro) + '</p>';
+        '<span class="step-count">' + (index + 3) + '</span>' +
+        '<h2>' + bi(section.title) + '</h2></div>';
+      if (section.intro) html += '<div class="step-intro">' + bi(section.intro) + '</div>';
 
       html += '<div class="questions">' + section.questions.map(function (raw) {
         return questionHTML(AIMA.getQuestion(raw.id));
       }).join('') + '</div>';
 
       html += '<div class="section-comment"><div class="field mb-0">' +
-        '<label for="note-' + section.id + '">Anything else we should know about this section? (optional)</label>' +
+        '<label for="note-' + section.id + '">' + bi(ui.sectionComment) + '</label>' +
         '<textarea id="note-' + section.id + '" data-sectionnote="' + section.id + '" ' +
-        'placeholder="Add anything that helps us understand your answers. Please do not include passwords, patient details or system addresses."></textarea>' +
+        'placeholder="' + esc(biPlain(ui.commentPlaceholder, '  ')) + '"></textarea>' +
         '</div></div>';
 
       html += '<div class="step-actions">' +
-        '<button type="button" class="btn" data-goto-prev>Back</button>' +
+        '<button type="button" class="btn" data-goto-prev>' + biInline(ui.back) + '</button>' +
         '<div class="spacer"></div>' +
         '<span class="status muted" data-section-progress="' + section.id + '"></span>' +
-        '<button type="button" class="btn btn-primary" data-goto-next>Continue</button>' +
+        '<button type="button" class="btn btn-primary" data-goto-next>' + biInline(ui.continue) + '</button>' +
         '</div>';
 
       el.innerHTML = html;
@@ -197,9 +229,9 @@
       steps.push({
         key: key,
         el: el,
-        label: key === 'intro' ? 'Before you start'
-          : key === 'details' ? 'About your organisation'
-            : key === 'finish' ? 'Save and send' : section.title,
+        label: key === 'intro' ? AIMA.T('Before you start', 'قبل أن تبدأ')
+          : key === 'details' ? AIMA.T('About your organisation', 'بيانات مؤسستكم')
+            : key === 'finish' ? AIMA.T('Save and send', 'الحفظ والإرسال') : section.title,
         section: section
       });
     });
@@ -207,7 +239,7 @@
     $('stepNav').innerHTML = steps.map(function (step, index) {
       return '<li><button type="button" data-step-to="' + index + '">' +
         '<span class="marker" data-marker="' + index + '">' + (index + 1) + '</span>' +
-        '<span class="label">' + esc(step.label) + '</span></button></li>';
+        '<span class="label">' + bi(step.label) + '</span></button></li>';
     }).join('');
   }
 
@@ -235,15 +267,15 @@
   }
 
   function validateDetails() {
-    var problems = [];
+    var problems = 0;
 
     var entityField = $('field-entity');
     entityField.classList.remove('invalid');
     removeFieldError(entityField);
     if (!state.entity.name) {
       entityField.classList.add('invalid');
-      addFieldError(entityField, 'Please choose your organisation.');
-      problems.push('organisation');
+      addFieldError(entityField, AIMA.T('Please choose your organisation.', 'يُرجى اختيار مؤسستكم.'));
+      problems++;
     }
 
     AIMA.respondentFields.forEach(function (field) {
@@ -253,13 +285,14 @@
       removeFieldError(wrap);
       if (!String(state.contact[field.id] || '').trim()) {
         wrap.classList.add('invalid');
-        addFieldError(wrap, 'Please complete this.');
-        problems.push(field.id);
+        addFieldError(wrap, AIMA.T('Please complete this.', 'يُرجى تعبئة هذا الحقل.'));
+        problems++;
       }
     });
 
-    if (problems.length) {
-      toast('Please complete the highlighted details before continuing.', 'err');
+    if (problems) {
+      toast(AIMA.T('Please complete the highlighted details before continuing.',
+        'يُرجى استكمال الحقول المميزة قبل المتابعة.'), 'err');
       var first = document.querySelector('.field.invalid');
       if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
       return false;
@@ -270,7 +303,7 @@
   function addFieldError(wrap, message) {
     var span = document.createElement('span');
     span.className = 'field-error';
-    span.textContent = message;
+    span.innerHTML = bi(message);
     wrap.appendChild(span);
   }
 
@@ -305,7 +338,6 @@
       current = current.filter(function (v) { return v !== optionValue; });
     }
 
-    // Keep the stored order matching the order shown on screen.
     var order = (question.options || []).map(function (o) { return o.value; }).concat([NONE, NA]);
     current.sort(function (a, b) { return order.indexOf(a) - order.indexOf(b); });
 
@@ -321,7 +353,7 @@
     var wrapper = $('q-' + questionId);
     if (!wrapper) return;
 
-    var answered = scoring.isAnswered(question, answer);
+    var answered = answers.isAnswered(question, answer);
     wrapper.classList.toggle('answered', answered);
 
     if (question.type === 'yesno') {
@@ -357,13 +389,13 @@
     $('entitySelect').value = state.entity.code === 'OTHER' ? CUSTOM_ENTITY : (state.entity.code || '');
     if (state.entity.code === 'OTHER') {
       $('field-entityName').removeAttribute('hidden');
-      $('entityNameInput').value = state.entity.name || '';
+      $('entityNameInput').value = t(state.entity.name, 'en') || '';
     } else {
       $('field-entityName').setAttribute('hidden', '');
     }
-    $('entityTypeSelect').value = state.entity.type || '';
-    $('regionSelect').value = state.entity.region || '';
-    $('sizeSelect').value = state.entity.size || '';
+    $('entityTypeSelect').value = state.entity.type ? t(state.entity.type, 'en') : '';
+    $('regionSelect').value = state.entity.region ? t(state.entity.region, 'en') : '';
+    $('sizeSelect').value = state.entity.size ? t(state.entity.size, 'en') : '';
     $('dateInput').value = state.submittedDate || '';
     AIMA.respondentFields.forEach(function (field) {
       var input = $(field.id);
@@ -373,6 +405,11 @@
     $('declarationWrap').classList.toggle('selected', !!state.declarationConfirmed);
   }
 
+  /** Find the bilingual entry whose English form matches a select value. */
+  function lookup(list, englishValue) {
+    return list.filter(function (item) { return t(item, 'en') === englishValue; })[0] || null;
+  }
+
   /* ------------------------------------------------------------------ *
    * Progress
    * ------------------------------------------------------------------ */
@@ -380,7 +417,7 @@
   function countAnswers() {
     var answered = 0;
     AIMA.allQuestions.forEach(function (question) {
-      if (scoring.isAnswered(question, state.answers[question.id])) answered++;
+      if (answers.isAnswered(question, state.answers[question.id])) answered++;
     });
     return answered;
   }
@@ -388,7 +425,7 @@
   function sectionProgress(section) {
     var answered = 0;
     section.questions.forEach(function (raw) {
-      if (scoring.isAnswered(AIMA.getQuestion(raw.id), state.answers[raw.id])) answered++;
+      if (answers.isAnswered(AIMA.getQuestion(raw.id), state.answers[raw.id])) answered++;
     });
     return { answered: answered, total: section.questions.length };
   }
@@ -398,7 +435,8 @@
     var total = AIMA.questionCount;
     var percent = Math.round((answered / total) * 100);
 
-    $('progressText').textContent = answered + ' of ' + total + ' questions answered';
+    $('progressText').innerHTML = answered + ' / ' + total +
+      '<span class="ar-in">' + esc(t(ui.ofQuestionsAnswered, 'ar')) + '</span>';
     $('progressPercent').textContent = percent + '%';
     $('progressBar').style.width = percent + '%';
 
@@ -411,19 +449,15 @@
         if (progress.answered === progress.total) marker.classList.add('done');
         else if (progress.answered > 0) marker.classList.add('partial');
         var label = document.querySelector('[data-section-progress="' + step.section.id + '"]');
-        if (label) {
-          label.textContent = progress.answered === progress.total
-            ? 'All questions answered'
-            : progress.answered + ' of ' + progress.total + ' answered';
-        }
+        if (label) label.textContent = progress.answered + ' / ' + progress.total;
       } else if (step.key === 'details') {
         if (state.entity.name && state.contact.contactName && state.contact.contactEmail) marker.classList.add('done');
         else if (state.entity.name || state.contact.contactName) marker.classList.add('partial');
       }
     });
 
-    $('entityStatus').textContent = (state.entity.name || 'Organisation not chosen') + ' · ' +
-      answered + ' of ' + total + ' answered';
+    $('entityStatus').textContent = (state.entity.name ? biPlain(state.entity.name) : t(ui.notChosen, 'en')) +
+      ' · ' + answered + ' / ' + total;
   }
 
   /* ------------------------------------------------------------------ *
@@ -432,7 +466,7 @@
 
   function unansweredList() {
     return AIMA.allQuestions.filter(function (question) {
-      return !scoring.isAnswered(question, state.answers[question.id]);
+      return !answers.isAnswered(question, state.answers[question.id]);
     });
   }
 
@@ -442,108 +476,124 @@
 
     if (!state.entity.name || !state.contact.contactName) {
       status.className = 'callout warn';
-      status.innerHTML = '<h4>Your organisation details are incomplete</h4>' +
-        '<p class="mb-0">Please go back to <strong>About your organisation</strong> and complete the required fields before saving your return.</p>';
+      status.innerHTML = '<h4>' + bi(AIMA.T('Your organisation details are incomplete',
+        'بيانات مؤسستكم غير مكتملة')) + '</h4><p class="mb-0">' +
+        bi(AIMA.T('Please go back to “About your organisation” and complete the required fields.',
+          'يُرجى الرجوع إلى «بيانات مؤسستكم» واستكمال الحقول المطلوبة.')) + '</p>';
     } else if (missing.length) {
       status.className = 'callout warn';
-      status.innerHTML = '<h4>' + missing.length + ' question' + (missing.length === 1 ? '' : 's') + ' still unanswered</h4>' +
-        '<p>You can still save and send the return, but please answer what you can first. Missing: ' +
+      status.innerHTML = '<h4>' + bi({
+        en: missing.length + ' question' + (missing.length === 1 ? '' : 's') + ' still unanswered',
+        ar: 'ما زال هناك ' + missing.length + ' سؤالاً دون إجابة'
+      }) + '</h4><p>' + bi(AIMA.T('You can still save and send, but please answer what you can first.',
+        'يمكنكم الحفظ والإرسال، لكن يُرجى الإجابة على ما تستطيعون أولاً.')) + '</p><p class="mb-0">' +
         missing.slice(0, 12).map(function (q) {
-          return '<button type="button" class="btn btn-sm" data-jump-question="' + q.id + '" style="margin:2px 3px">Question ' + q.number + '</button>';
+          return '<button type="button" class="btn btn-sm" data-jump-question="' + q.id + '" style="margin:2px 3px">' +
+            t(ui.question, 'en') + ' ' + q.number + '</button>';
         }).join('') +
-        (missing.length > 12 ? ' <span class="muted">and ' + (missing.length - 12) + ' more</span>' : '') + '</p>';
+        (missing.length > 12 ? ' <span class="muted">+' + (missing.length - 12) + '</span>' : '') + '</p>';
     } else {
       status.className = 'callout good';
-      status.innerHTML = '<h4>All questions answered — thank you</h4>' +
-        '<p class="mb-0">Complete the three steps below to finish your return.</p>';
+      status.innerHTML = '<h4>' + bi(AIMA.T('All questions answered — thank you',
+        'تمت الإجابة على جميع الأسئلة — شكراً لكم')) + '</h4><p class="mb-0">' +
+        bi(AIMA.T('Complete the three steps below to finish your return.',
+          'أكملوا الخطوات الثلاث أدناه لإنهاء النموذج.')) + '</p>';
     }
 
     var rows = '';
     AIMA.sections.forEach(function (section) {
-      rows += '<tr class="section-row"><th>' + esc(section.title) + '</th><td>' +
-        sectionProgress(section).answered + ' of ' + section.questions.length + '</td></tr>';
+      var progress = sectionProgress(section);
+      rows += '<tr class="section-row"><th>' + bi(section.title) + '</th><td>' +
+        progress.answered + ' / ' + progress.total + '</td></tr>';
       section.questions.forEach(function (raw) {
         var question = AIMA.getQuestion(raw.id);
-        var answered = scoring.isAnswered(question, state.answers[question.id]);
-        rows += '<tr><th><span class="qnum">' + question.number + '</span>' + esc(question.text) + '</th>' +
+        var answered = answers.isAnswered(question, state.answers[question.id]);
+        rows += '<tr><th><span class="qnum">' + question.number + '</span>' + bi(question.text) + '</th>' +
           '<td' + (answered ? '' : ' class="missing"') + '>' +
-          esc(answered ? scoring.describeAnswer(question, state.answers[question.id]) : 'Not answered') +
-          '</td></tr>';
+          bi(answers.describeAnswerBoth(question, state.answers[question.id])) + '</td></tr>';
       });
     });
     $('reviewTable').querySelector('tbody').innerHTML = rows;
   }
 
   function renderPrintSummary() {
-    var brand = AIMA.branding;
     var missing = unansweredList().length;
+    var name = state.entity.name ? biPlain(state.entity.name) : '—';
 
-    $('printSubtitle').textContent = (state.entity.name || 'Organisation not specified') +
-      (state.entity.type ? ' · ' + state.entity.type : '');
+    $('printSubtitle').innerHTML = esc(name) +
+      (state.entity.type ? ' · ' + esc(biPlain(state.entity.type)) : '');
     $('printMeta').textContent = [
-      'Completed by: ' + (state.contact.contactName || '—') + (state.contact.contactRole ? ', ' + state.contact.contactRole : ''),
-      'Date: ' + (state.submittedDate || '—'),
-      'Questions answered: ' + countAnswers() + ' of ' + AIMA.questionCount
+      t(ui.completedBy, 'en') + ': ' + (state.contact.contactName || '—') +
+        (state.contact.contactRole ? ', ' + state.contact.contactRole : ''),
+      t(ui.date, 'en') + ': ' + (state.submittedDate || '—'),
+      countAnswers() + ' / ' + AIMA.questionCount + ' ' + t(ui.ofQuestionsAnswered, 'en')
     ].join('  ·  ');
 
-    var html = '';
+    function row(label, value) {
+      return '<tr><th style="width:30%">' + bi(label) + '</th><td>' + esc(value) + '</td></tr>';
+    }
 
-    html += '<h2>Organisation details</h2><table class="answer-log"><tbody>' +
-      row('Organisation', (state.entity.code ? state.entity.code + ' — ' : '') + (state.entity.name || '—')) +
-      row('Type', state.entity.type || '—') +
-      row('Region', state.entity.region || '—') +
-      row('Approximate size', state.entity.size || '—') +
-      row('Return cycle', brand.cycle) +
-      row('Date completed', state.submittedDate || '—') +
-      row('Completed by', (state.contact.contactName || '—') + (state.contact.contactRole ? ' (' + state.contact.contactRole + ')' : '')) +
-      row('Contact email', state.contact.contactEmail || '—') +
-      row('Contact number', state.contact.contactPhone || '—') +
-      row('Approved by', state.contact.approverName || '—') +
+    var html = '<h2>' + bi(ui.organisationDetails) + '</h2><table class="answer-log"><tbody>' +
+      row(ui.organisation, (state.entity.code ? state.entity.code + ' — ' : '') + name) +
+      row(ui.type, state.entity.type ? biPlain(state.entity.type) : '—') +
+      row(ui.region, state.entity.region ? biPlain(state.entity.region) : '—') +
+      row(ui.size, state.entity.size ? biPlain(state.entity.size) : '—') +
+      row(ui.cycle, biPlain(AIMA.branding.cycle)) +
+      row(ui.dateCompleted, state.submittedDate || '—') +
+      row(ui.completedBy, (state.contact.contactName || '—') +
+        (state.contact.contactRole ? ' (' + state.contact.contactRole + ')' : '')) +
+      row(ui.contactEmail, state.contact.contactEmail || '—') +
+      row(ui.contactPhone, state.contact.contactPhone || '—') +
+      row(ui.approvedBy, state.contact.approverName || '—') +
       '</tbody></table>';
 
     AIMA.sections.forEach(function (section, index) {
-      html += '<h2' + (index === 0 ? ' style="margin-top:8mm"' : '') + '>' + esc(section.title) + '</h2>';
-      html += '<table class="answer-log"><thead><tr><th style="width:8%">No.</th><th style="width:56%">Question</th><th>Answer</th></tr></thead><tbody>';
+      html += '<h2' + (index === 0 ? ' style="margin-top:7mm"' : '') + '>' + bi(section.title) + '</h2>';
+      html += '<table class="answer-log"><thead><tr>' +
+        '<th style="width:6%">' + bi(ui.number) + '</th>' +
+        '<th style="width:52%">' + bi(ui.question) + '</th>' +
+        '<th>' + bi(ui.answer) + '</th></tr></thead><tbody>';
       section.questions.forEach(function (raw) {
         var question = AIMA.getQuestion(raw.id);
-        var answered = scoring.isAnswered(question, state.answers[question.id]);
-        html += '<tr><td>' + question.number + '</td><td>' + esc(question.text) + '</td><td>' +
-          esc(answered ? scoring.describeAnswer(question, state.answers[question.id]) : 'Not answered') + '</td></tr>';
+        html += '<tr><td>' + question.number + '</td><td>' + bi(question.text) + '</td><td>' +
+          bi(answers.describeAnswerBoth(question, state.answers[question.id])) + '</td></tr>';
       });
       if (state.sectionNotes[section.id]) {
-        html += '<tr><td></td><td><em>Additional comments</em></td><td>' + esc(state.sectionNotes[section.id]) + '</td></tr>';
+        html += '<tr><td></td><td><em>' + bi(ui.yourComments) + '</em></td><td>' +
+          esc(state.sectionNotes[section.id]) + '</td></tr>';
       }
       html += '</tbody></table>';
     });
 
-    html += '<h2 style="margin-top:6mm">Declaration</h2>';
-    html += '<p style="font-size:9pt">' +
-      (state.declarationConfirmed
-        ? 'The respondent has confirmed that these answers are accurate to the best of their knowledge and that a senior manager has approved this return.'
-        : 'The declaration has not been confirmed in the online form. Please sign below to confirm the answers are accurate.') +
-      '</p>';
+    html += '<h2 style="margin-top:6mm">' + bi(ui.declaration) + '</h2>';
+    html += '<p style="font-size:9pt">' + bi(state.declarationConfirmed
+      ? AIMA.T('The respondent has confirmed that these answers are accurate to the best of their knowledge and that a senior manager has approved this return.',
+        'أقر معبئ النموذج بأن هذه الإجابات صحيحة على حد علمه وأن أحد كبار المسؤولين قد اعتمد النموذج.')
+      : AIMA.T('The declaration was not confirmed in the online form. Please sign below to confirm the answers are accurate.',
+        'لم يتم تأكيد الإقرار في النموذج الإلكتروني. يُرجى التوقيع أدناه لتأكيد صحة الإجابات.')) + '</p>';
     html += '<table class="signoff"><tbody>' +
-      '<tr><th>Completed by</th><td>' + esc(state.contact.contactName || '') +
+      '<tr><th>' + bi(ui.completedBy) + '</th><td>' + esc(state.contact.contactName || '') +
       (state.contact.contactRole ? ', ' + esc(state.contact.contactRole) : '') +
-      '</td><th>Signature</th><td class="sign-line"></td><th>Date</th><td class="sign-line"></td></tr>' +
-      '<tr><th>Approved by</th><td>' + esc(state.contact.approverName || '') +
-      '</td><th>Signature</th><td class="sign-line"></td><th>Date</th><td class="sign-line"></td></tr>' +
+      '</td><th>' + bi(ui.signature) + '</th><td class="sign-line"></td><th>' + bi(ui.date) + '</th><td class="sign-line"></td></tr>' +
+      '<tr><th>' + bi(ui.approvedBy) + '</th><td>' + esc(state.contact.approverName || '') +
+      '</td><th>' + bi(ui.signature) + '</th><td class="sign-line"></td><th>' + bi(ui.date) + '</th><td class="sign-line"></td></tr>' +
       '</tbody></table>';
 
     html += '<div class="print-footnote">' +
-      (missing ? '<strong>Note:</strong> ' + missing + ' question' + (missing === 1 ? ' was' : 's were') + ' left unanswered. ' : '') +
-      esc(brand.returnInstructions) + ' Return to ' + esc(brand.returnContact) + ' by ' + esc(brand.returnDeadline) + '. ' +
-      esc(brand.documentRef) + ' · ' + esc(brand.classification) + '</div>';
+      (missing ? '<strong>' + missing + '</strong> ' + esc(t(AIMA.T('questions were left unanswered.',
+        'سؤالاً تُرك دون إجابة.'), 'en')) + ' ' : '') +
+      esc(AIMA.brand('returnInstructions', 'en')) + ' — ' + esc(AIMA.brand('returnContact', 'en')) + ' · ' +
+      esc(AIMA.brand('returnDeadline', 'en')) + ' · ' + esc(AIMA.brand('documentRef', 'en')) + ' · ' +
+      esc(AIMA.brand('classification', 'en')) +
+      '<span class="ar">' + esc(AIMA.brand('returnInstructions', 'ar')) + ' — ' +
+      esc(AIMA.brand('returnContact', 'ar')) + ' · ' + esc(AIMA.brand('returnDeadline', 'ar')) + ' · ' +
+      esc(AIMA.brand('classification', 'ar')) + '</span></div>';
 
     $('printSummary').innerHTML = html;
-
-    function row(label, value) {
-      return '<tr><th style="width:32%">' + esc(label) + '</th><td>' + esc(value) + '</td></tr>';
-    }
   }
 
   /* ------------------------------------------------------------------ *
-   * Saving, export, import
+   * Saving, export, resume
    * ------------------------------------------------------------------ */
 
   function queueSave() {
@@ -551,8 +601,6 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       saveDraft();
-      // Keep the printable version in step with the answers, so printing from
-      // the browser menu produces the same document as the button does.
       renderPrintSummary();
     }, 600);
   }
@@ -560,9 +608,12 @@
   function saveDraft(silent) {
     var ok = util.store.save(STORAGE_KEY, state);
     $('savedStatus').textContent = ok
-      ? 'Saved ' + new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-      : 'Not saved in this browser — download the data file to keep your answers';
-    if (!silent && !ok) toast('This browser will not store your progress. Please download the data file before closing.', 'err');
+      ? t(ui.savedAt, 'en') + ' ' + new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+      : '';
+    if (!silent && !ok) {
+      toast(AIMA.T('This browser will not store your progress. Please download the data file before closing.',
+        'لن يحفظ هذا المتصفح تقدمكم. يُرجى تنزيل ملف البيانات قبل الإغلاق.'), 'err');
+    }
     return ok;
   }
 
@@ -570,24 +621,23 @@
     var saved = util.store.load(STORAGE_KEY, null);
     if (!saved || !saved.answers) return false;
     state = Object.assign(newReturn(), saved);
-    state.entity = Object.assign({ code: '', name: '', type: '', region: '', size: '' }, saved.entity || {});
+    state.entity = Object.assign({ code: '', name: null, type: null, region: null, size: null }, saved.entity || {});
     state.contact = Object.assign({ contactName: '', contactRole: '', contactEmail: '', contactPhone: '', approverName: '' }, saved.contact || {});
     state.answers = saved.answers || {};
     state.sectionNotes = saved.sectionNotes || {};
     return true;
   }
 
-  /** The return file. Deliberately contains answers only — no scores. */
+  /** The return file. Answers only — no scores. */
   function buildReturnFile() {
-    var brand = AIMA.branding;
     return {
       schemaVersion: AIMA.meta.schemaVersion,
       frameworkVersion: AIMA.meta.frameworkVersion,
       returnTitle: AIMA.meta.title,
-      programme: brand.programme,
-      requestedBy: brand.organisation,
-      documentRef: brand.documentRef,
-      period: brand.cycle,
+      programme: AIMA.branding.programme,
+      requestedBy: AIMA.branding.organisation,
+      documentRef: AIMA.brand('documentRef', 'en'),
+      period: AIMA.brand('cycle', 'en'),
       id: state.id,
       entity: state.entity,
       contact: state.contact,
@@ -598,7 +648,7 @@
       progress: {
         answered: countAnswers(),
         total: AIMA.questionCount,
-        percent: scoring.round((countAnswers() / AIMA.questionCount) * 100, 1)
+        percent: Math.round((countAnswers() / AIMA.questionCount) * 1000) / 10
       },
       createdAt: state.createdAt,
       updatedAt: state.updatedAt,
@@ -607,9 +657,9 @@
   }
 
   function exportFileName(extension) {
-    return 'ai-assurance-return_' +
-      util.slug((state.entity.code || 'organisation') + '-' + (state.entity.name || '')) + '_' +
-      util.slug(AIMA.branding.cycle) + '.' + extension;
+    return 'ai-cyber-return_' +
+      util.slug((state.entity.code || 'organisation') + '-' + t(state.entity.name, 'en')) + '_' +
+      util.slug(AIMA.brand('cycle', 'en')) + '.' + extension;
   }
 
   function downloadJSON() {
@@ -617,36 +667,41 @@
     util.downloadJSON(exportFileName('json'), buildReturnFile());
     var missing = unansweredList().length;
     toast(missing
-      ? 'Data file downloaded. ' + missing + ' question' + (missing === 1 ? '' : 's') + ' still unanswered.'
-      : 'Data file downloaded. Please email it with your PDF.', missing ? '' : 'ok');
+      ? {
+        en: 'Data file downloaded. ' + missing + ' question(s) still unanswered.',
+        ar: 'تم تنزيل ملف البيانات. ما زال هناك ' + missing + ' سؤالاً دون إجابة.'
+      }
+      : AIMA.T('Data file downloaded. Please email it with your PDF.',
+        'تم تنزيل ملف البيانات. يُرجى إرساله مع ملف PDF.'), missing ? '' : 'ok');
   }
 
   function savePDF() {
     renderPrintSummary();
-    setTimeout(function () { window.print(); }, 140);
+    setTimeout(function () { window.print(); }, 160);
   }
 
-  /** Pick up a return someone else started, from the data file they saved. */
   function resumeFromFile(fileList) {
     util.readJSONFiles(fileList).then(function (result) {
       if (result.errors.length) {
-        toast(result.errors[0].file + ': ' + result.errors[0].error, 'err');
+        toast(AIMA.T('That file could not be read.', 'تعذّرت قراءة هذا الملف.'), 'err');
         return;
       }
       var file = result.records[0] && result.records[0].data;
       if (!file || typeof file !== 'object' || !file.answers) {
-        toast('That file is not a saved return. Look for the .json file downloaded from this questionnaire.', 'err');
+        toast(AIMA.T('That is not a saved return. Look for the .json file downloaded from this questionnaire.',
+          'هذا ليس نموذجاً محفوظاً. ابحثوا عن ملف .json الذي جرى تنزيله من هذا الاستبيان.'), 'err');
         return;
       }
       var major = String(file.schemaVersion || '').split('.')[0];
       if (major && major !== String(AIMA.meta.schemaVersion).split('.')[0]) {
-        toast('That file came from an earlier version of this questionnaire, so it cannot be loaded.', 'err');
+        toast(AIMA.T('That file came from an earlier version of this questionnaire and cannot be loaded.',
+          'هذا الملف من نسخة سابقة من الاستبيان ولا يمكن تحميله.'), 'err');
         return;
       }
 
       state = Object.assign(newReturn(), {
         id: file.id || util.uid('return'),
-        entity: Object.assign({ code: '', name: '', type: '', region: '', size: '' }, file.entity || {}),
+        entity: Object.assign({ code: '', name: null, type: null, region: null, size: null }, file.entity || {}),
         contact: Object.assign({ contactName: '', contactRole: '', contactEmail: '', contactPhone: '', approverName: '' }, file.contact || {}),
         submittedDate: file.submittedDate || util.todayISO(),
         declarationConfirmed: !!file.declarationConfirmed,
@@ -661,20 +716,24 @@
       renderPrintSummary();
       refreshProgress();
       showStep(1);
-      toast('Loaded the saved return for ' + (state.entity.name || 'your organisation') + ' — ' +
-        countAnswers() + ' of ' + AIMA.questionCount + ' questions already answered.', 'ok');
+      toast({
+        en: 'Loaded the saved return — ' + countAnswers() + ' of ' + AIMA.questionCount + ' questions already answered.',
+        ar: 'تم تحميل النموذج المحفوظ — ' + countAnswers() + ' من ' + AIMA.questionCount + ' سؤالاً مُجاباً بالفعل.'
+      }, 'ok');
     });
   }
 
   function clearAll() {
-    if (!window.confirm('Clear all answers and start again? Download your data file first if you want to keep them.')) return;
+    if (!window.confirm(t(AIMA.T('Clear all answers and start again?', 'مسح جميع الإجابات والبدء من جديد؟'), 'en') +
+      '\n' + t(AIMA.T('Clear all answers and start again?', 'مسح جميع الإجابات والبدء من جديد؟'), 'ar'))) return;
     state = newReturn();
     util.store.remove(STORAGE_KEY);
     writeDetailsToForm();
     paintAllAnswers();
+    renderPrintSummary();
     refreshProgress();
     showStep(0);
-    toast('All answers cleared.', 'ok');
+    toast(AIMA.T('All answers cleared.', 'تم مسح جميع الإجابات.'), 'ok');
   }
 
   /* ------------------------------------------------------------------ *
@@ -738,7 +797,7 @@
         var wrapper = $('q-' + input.dataset.qid);
         if (wrapper) {
           wrapper.classList.toggle('answered',
-            scoring.isAnswered(AIMA.getQuestion(input.dataset.qid), state.answers[input.dataset.qid]));
+            answers.isAnswered(AIMA.getQuestion(input.dataset.qid), state.answers[input.dataset.qid]));
         }
         refreshProgress();
       }
@@ -753,16 +812,21 @@
       var code = this.value;
       if (code === CUSTOM_ENTITY) {
         $('field-entityName').removeAttribute('hidden');
-        state.entity = { code: 'OTHER', name: $('entityNameInput').value.trim(), type: state.entity.type, region: state.entity.region, size: state.entity.size };
+        var typed = $('entityNameInput').value.trim();
+        state.entity = {
+          code: 'OTHER',
+          name: typed ? { en: typed, ar: typed } : null,
+          type: state.entity.type, region: state.entity.region, size: state.entity.size
+        };
       } else {
         $('field-entityName').setAttribute('hidden', '');
         var entity = AIMA.getEntity(code);
         state.entity = entity
           ? { code: entity.code, name: entity.name, type: entity.type, region: entity.region, size: entity.size }
-          : { code: '', name: '', type: '', region: '', size: '' };
-        $('entityTypeSelect').value = state.entity.type || '';
-        $('regionSelect').value = state.entity.region || '';
-        $('sizeSelect').value = state.entity.size || '';
+          : { code: '', name: null, type: null, region: null, size: null };
+        $('entityTypeSelect').value = state.entity.type ? t(state.entity.type, 'en') : '';
+        $('regionSelect').value = state.entity.region ? t(state.entity.region, 'en') : '';
+        $('sizeSelect').value = state.entity.size ? t(state.entity.size, 'en') : '';
       }
       $('field-entity').classList.remove('invalid');
       removeFieldError($('field-entity'));
@@ -771,16 +835,23 @@
     });
 
     $('entityNameInput').addEventListener('input', function () {
-      state.entity.name = this.value.trim();
+      var typed = this.value.trim();
+      state.entity.name = typed ? { en: typed, ar: typed } : null;
       queueSave();
       refreshProgress();
     });
 
-    [['entityTypeSelect', 'type'], ['regionSelect', 'region'], ['sizeSelect', 'size']].forEach(function (pair) {
-      $(pair[0]).addEventListener('change', function () {
-        state.entity[pair[1]] = this.value;
-        queueSave();
-      });
+    $('entityTypeSelect').addEventListener('change', function () {
+      state.entity.type = lookup(AIMA.entityTypes, this.value);
+      queueSave();
+    });
+    $('regionSelect').addEventListener('change', function () {
+      state.entity.region = lookup(AIMA.regions, this.value);
+      queueSave();
+    });
+    $('sizeSelect').addEventListener('change', function () {
+      state.entity.size = lookup(AIMA.entitySizes, this.value);
+      queueSave();
     });
 
     $('dateInput').addEventListener('change', function () {
@@ -790,8 +861,7 @@
 
     $('contactFields').addEventListener('input', function (event) {
       var input = event.target;
-      if (!input.id) return;
-      if (state.contact[input.id] === undefined) return;
+      if (!input.id || state.contact[input.id] === undefined) return;
       state.contact[input.id] = input.value;
       var wrap = $('field-' + input.id);
       if (wrap) { wrap.classList.remove('invalid'); removeFieldError(wrap); }
@@ -806,7 +876,7 @@
     });
 
     $('btnSaveProgress').addEventListener('click', function () {
-      if (saveDraft()) toast('Progress saved in this browser.', 'ok');
+      if (saveDraft()) toast(AIMA.T('Progress saved in this browser.', 'تم حفظ التقدم في هذا المتصفح.'), 'ok');
     });
     $('btnSavePDF').addEventListener('click', savePDF);
     $('btnSavePDFTop').addEventListener('click', savePDF);
@@ -822,7 +892,6 @@
     });
 
     window.addEventListener('beforeprint', renderPrintSummary);
-    // Safari does not fire beforeprint; it switches the print media query instead.
     if (window.matchMedia) {
       var printQuery = window.matchMedia('print');
       if (printQuery.addEventListener) {
@@ -838,7 +907,7 @@
    * ------------------------------------------------------------------ */
 
   function init() {
-    AIMA.applyBranding({ title: AIMA.meta.title });
+    AIMA.applyBranding({ title: AIMA.t(AIMA.meta.title, 'en') });
     buildIntro();
     buildDetailsStep();
     buildSectionSteps();
@@ -851,9 +920,9 @@
     renderPrintSummary();
 
     if (restored) {
-      var answered = countAnswers();
-      showStep(answered > 0 ? Math.min(steps.length - 1, 2) : 0);
-      toast('We restored your saved answers in this browser.', 'ok');
+      showStep(countAnswers() > 0 ? Math.min(steps.length - 1, 2) : 0);
+      toast(AIMA.T('We restored your saved answers in this browser.',
+        'تمت استعادة إجاباتكم المحفوظة في هذا المتصفح.'), 'ok');
     } else {
       showStep(0);
     }
