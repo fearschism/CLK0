@@ -1,0 +1,8 @@
+# Optional tooling for tools/browser-smoke.mjs (installed with --no-save)
+node_modules/
+package-lock.json
+
+# Local output from tools/browser-smoke.mjs
+tools/.artifacts/
+
+.DS_Store
