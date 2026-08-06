@@ -1,92 +1,87 @@
-# AI Cyber Assurance Programme — questionnaire and console
+# AI in Cybersecurity — maturity return and console
 
-An annual return on how member organisations use and secure artificial intelligence, built for a health governing body that oversees **30 organisations**.
+How far has each organisation actually taken artificial intelligence into its cybersecurity work? Not "do you govern your chatbots", but: is AI reducing false positives in the SOC, is response automated, is GRC evidence collected automatically, would you still detect an attack if the AI tooling failed.
 
-Two separate pages, for two separate audiences:
+Built for a health governing body that oversees **30 organisations**. Two audiences, two files:
 
-| Page | Who opens it | What it does |
+| File | Who gets it | What it does |
 | --- | --- | --- |
-| `index.html` | **The 30 reporting organisations.** Send them this page (or a link to it). | A plain questionnaire: Yes / No / Not sure, a choice from a list, or tick boxes. At the end they save a **PDF** and download a **data file**. No scores, ratings or league tables are visible anywhere. |
-| `console.html` | **The governing body only.** Never linked from the questionnaire. | Loads the returned data files, derives a rating from the plain answers, and produces the sector dashboard, per-organisation reports, question analysis and exports. |
+| **`index.html`** | The 30 reporting organisations. Email it to them. | The questionnaire. Plain questions in **English and Arabic together**, answered with Yes / No / Not sure, a drop-down or tick boxes. At the end they save a **PDF** and download a **data file**. No score, rating or league table is visible anywhere. |
+| **`console.html`** | The governing body only. Never linked from the questionnaire. | Loads the returned data files, derives a rating, and produces the sector dashboard, per-organisation reports, question analysis and exports. |
 
-The split is deliberate: respondents answer factual questions in their own language, and all judgement happens on your side. A test in the suite fails if the questionnaire ever starts referencing the rating engine.
-
-Everything is plain HTML, CSS and JavaScript — no build step, no server, no external libraries, no data leaving the browser.
+Each file is **completely self-contained** — the stylesheet, all the scripts and the crest are inlined. There is nothing to install, nothing to host and no network access required. A recipient can open the attachment straight from their mail client, work offline, and email two files back.
 
 ---
 
 ## Quick start
 
-```bash
-python3 -m http.server 8080     # then open http://localhost:8080/
-```
+Double-click `index.html`. That is the whole thing.
 
-Opening the files directly from disk also works, because there are no module imports or `fetch` calls.
+To run a cycle:
 
-**Rolling out a cycle**
+1. Edit `src/js/branding.js` — the client's name, logo, colours, document reference, deadline and return address, in both languages.
+2. Edit the register of 30 organisations in `src/js/framework.js`.
+3. Run `node tools/build.mjs` to regenerate `index.html` and `console.html`.
+4. Email `index.html` to the organisations (rename it to whatever suits, there are no dependencies).
+5. They answer, click **Save as PDF**, click **Download data file**, and email both back.
+6. You open `console.html`, drop in all the data files at once, and read the sector view.
 
-1. Edit `assets/js/branding.js` — the client's name, logo, colours, document reference, deadline and return address.
-2. Edit the register of 30 organisations in `assets/js/framework.js`.
-3. Publish `index.html` (with the `assets/` folder) where the organisations can reach it, and send them the link.
-4. Each organisation answers the questions, clicks **Save as PDF**, clicks **Download data file**, and emails both back.
-5. You open `console.html`, drop in all the data files at once, and read the sector view.
-
-Before the first return arrives, **Load demonstration data** in the console fills the register with synthetic returns so you can see and rehearse the whole reporting flow. Demonstration rows are labelled `demo`.
+Before the first return arrives, **Load demonstration data** in the console fills the register with synthetic returns so you can rehearse the whole reporting cycle.
 
 ---
 
-## What the respondent sees
+## Bilingual, with no toggle
 
-<!-- The questionnaire is deliberately unremarkable: that is the point. -->
+Every visible string is a pair. English runs in the normal flow; Arabic sits beneath it, right-aligned and set in an Arabic face, so both are always on screen and neither is a second-class citizen. That applies to questions, hints, every answer option, section titles, the interface, the rating bands, the organisation register, and both printed reports.
 
-- A stepped form: an introduction, their organisation's details, ten short sections, then a save-and-send page. **51 questions, about 15 minutes.**
-- Question types only: **Yes / No / Not sure**, a **drop-down list**, **tick all that apply**, and the occasional **number**. Nothing to write from scratch, though every section has an optional comment box.
-- **Not sure** is offered on purpose. It is more useful than a guess, and the console counts these separately as visibility gaps.
-- **Not applicable** appears only where a question genuinely may not apply, such as the clinical AI section.
-- Progress is saved in their browser as they go, so they can close the page and come back.
-- The finish page lists anything still unanswered, with a button that jumps straight to each one, and a **check your answers** table.
+Short labels share a line (`Yes نعم`), longer ones stack. Drop-down options carry both languages in the same entry, because a `<select>` cannot hold two lines.
 
-The PDF they save is a clean four-page official document: letterhead, their details, every question with the answer they gave in words, their comments, and a signature block for them and their approver. No numbers, no rating.
+Adding a language means adding a key to the `{ en, ar }` pairs in `src/js/framework.js` and one rendering helper; nothing else assumes two.
 
 ---
 
-## The questions and where they come from
+## What the questionnaire measures
 
-Ten sections, weighted for the overall rating:
+**55 questions across twelve weighted sections.** About 15 minutes, almost all of it clicking.
 
-| Section | Weight | Questions | Anchored to |
-| --- | --- | --- | --- |
-| A · Rules and responsibility for AI | 11% | 5 | NIST AI RMF (GOVERN), ISO/IEC 42001 A.2–A.3 |
-| B · Knowing which AI tools you have | 10% | 6 | NIST AI RMF (MAP), ISO/IEC 42001 A.4, OWASP LLM03 |
-| C · Protecting patient and staff information | 13% | 6 | NIST AI 600-1, OWASP LLM02, ISO/IEC 42001 A.7, HITRUST AI |
-| D · Safe use of chatbots and generative AI | 13% | 6 | OWASP LLM01/05/06/08/09, EU AI Act Art. 14 |
-| E · Buying AI safely | 9% | 4 | CISA/NCSC secure AI guidelines, OWASP LLM03, ISO/IEC 42001 A.10 |
-| F · Using AI to defend the organisation | 12% | 6 | NIST CSF 2.0 (DETECT, RESPOND), HHS 405(d) HICP |
-| G · Testing and checking AI | 9% | 4 | NIST AI RMF (MEASURE), MITRE ATLAS, EU AI Act Art. 15 |
-| H · When AI goes wrong | 9% | 5 | NIST AI RMF (MANAGE), NIST CSF 2.0 (RESPOND, RECOVER) |
-| I · People and awareness | 7% | 4 | ISO/IEC 42001 A.3–A.4, HHS 405(d) HICP |
-| J · Clinical AI and connected devices | 7% | 5 | HITRUST AI, NIST CSF 2.0, EU AI Act high-risk AI |
+| Section | Weight | Anchored to |
+| --- | --- | --- |
+| A · Strategy, ownership and adoption | 9% | NIST AI RMF (GOVERN), ISO/IEC 42001, SOC-CMM |
+| B · Data and telemetry foundation | 8% | NIST CSF 2.0, SOC-CMM (log management) |
+| C · Threat detection and monitoring | 12% | NIST CSF 2.0 (DETECT), MITRE ATT&CK coverage |
+| D · Alert triage and false positives | 10% | SOC-CMM (triage, efficiency metrics) |
+| E · Incident response and SOC automation | 11% | NIST CSF 2.0 (RESPOND), SOC-CMM, clinical safety |
+| F · Threat intelligence and hunting | 7% | NIST CSF 2.0, MITRE ATT&CK |
+| G · Vulnerabilities and attack surface | 7% | NIST CSF 2.0, ISO/IEC 27001 A.8 |
+| H · Identity and insider risk | 7% | NIST CSF 2.0, patient-record access monitoring |
+| I · Data protection and leak prevention | 6% | ISO/IEC 27001, OWASP LLM02, NIST AI 600-1 |
+| J · Governance, risk and compliance | 9% | ISO/IEC 27001 clauses 6 and 9, ISO/IEC 42001 |
+| K · Cyber resilience and recovery | 8% | NIST CSF 2.0 (RECOVER), clinical continuity |
+| L · Assurance and skills | 6% | NIST AI RMF (MEASURE), OWASP LLM Top 10, MITRE ATLAS |
 
-Reference frameworks, all current:
+The health context runs through it rather than sitting in its own box: detection coverage is measured up to clinical systems and medical devices, automated containment must never disrupt patient care without a human decision, and recovery testing is about clinical systems and measured recovery time.
 
-- **OWASP Top 10 for LLM Applications 2025** — the LLM-specific risks: prompt injection, sensitive information disclosure, supply chain, excessive agency, vector and embedding weaknesses, misinformation.
-- **NIST AI Risk Management Framework 1.0** (2023) with the **Generative AI Profile, NIST AI 600-1** (2024) — the governance spine.
-- **ISO/IEC 42001:2023** — the certifiable AI management system standard, so findings map to something an auditor recognises.
-- **Guidelines for Secure AI System Development** — CISA, NCSC and international partners (2023).
-- **MITRE ATLAS** — adversary techniques against AI, behind the testing and red-teaming questions.
-- **NIST Cybersecurity Framework 2.0** (2024) — the underlying detect and respond outcomes.
-- **HITRUST AI security assessment** and **HHS 405(d) HICP** — the health-sector overlay.
-- **EU AI Act** (Regulation 2024/1689) — human oversight (Art. 14) and accuracy, robustness and cybersecurity (Art. 15).
+### Reference frameworks
 
-Every question carries its own framework references. The console's **Method** tab shows how many questions map to each framework, and the answer-level CSV includes the mapping per row, so a finding can always be traced back to a published control.
+Twelve, all current, and every question maps to at least one:
+
+- **NIST Cybersecurity Framework 2.0** — the spine for the detect, respond and recover domains.
+- **MITRE ATT&CK** — for measuring what detection actually covers.
+- **SOC-CMM** — the reference model for security operations maturity, behind the triage, automation and metrics questions.
+- **NIST AI Risk Management Framework 1.0** and the **Generative AI Profile (NIST AI 600-1)** — for governing the AI you rely on.
+- **OWASP Top 10 for LLM Applications 2025** and **MITRE ATLAS** — for the assurance of AI assistants used inside the SOC, including prompt injection.
+- **ISO/IEC 42001:2023** and **ISO/IEC 27001:2022** — management-system anchors, so findings map to something an auditor recognises.
+- **CISA / NCSC Guidelines for Secure AI System Development**.
+- **HITRUST AI security assessment** and **HHS 405(d) HICP** — the health overlay.
+- **EU AI Act** — human oversight (Art. 14) and robustness (Art. 15).
+
+The console's **Method** tab shows how many questions map to each framework, and the answer-level CSV carries the mapping per row.
 
 ---
 
 ## How the rating works
 
-Respondents never see this. The console applies it.
-
-**1 — Each answer becomes a value out of 5.**
+Respondents never see it; the console applies it.
 
 | Answer | Value |
 | --- | --- |
@@ -98,135 +93,108 @@ Respondents never see this. The console applies it.
 | Tick boxes | the share of boxes ticked, scaled to 5 (“none of these” scores 0) |
 | A number | context only, not rated |
 
-`Not sure` scores 1 rather than 0 on purpose: if the accountable respondent cannot confirm a control, it is not being managed — but it is not the same as a straight No, and these answers are also counted separately so you can chase them.
+`Not sure` scores 1 rather than 0 deliberately: if the accountable respondent cannot confirm a capability it is not being managed, but it is not the same as a flat No — and those answers are counted separately so you can chase them.
 
-**2 — Each section is a weighted average** of its questions; core questions count 1.5 times a standard one.
+Sections are weighted averages, with core questions counting 1.5×; the overall rating weights the twelve sections. *Not applicable* leaves both sides of the average. Ratings map to five bands — **Not established, Emerging, Established, Managed, Leading** — and anything below the target band becomes an action ranked by `section weight × question weight × size of the gap`, quoting the answer that triggered it, in both languages.
 
-**3 — The overall rating is a weighted average of the sections**, using the weights in the table above. Questions marked *Not applicable* leave both the top and the bottom of the average rather than counting as zero, so a laboratory is not penalised for having no clinical AI.
-
-**4 — Ratings map to five bands:**
-
-| Band | Range | Meaning |
-| --- | --- | --- |
-| 1 · Not established | 0.00 – 1.49 | Little or no control over how AI is used |
-| 2 · Emerging | 1.50 – 2.49 | Some controls, but informal or partial |
-| 3 · Established | 2.50 – 3.49 | Documented and applied where it matters most |
-| 4 · Managed | 3.50 – 4.49 | Consistently applied, checked and measured |
-| 5 · Leading | 4.50 – 5.00 | Automated, continuously tested, ahead of the sector |
-
-**5 — Anything below the target band becomes an action**, ranked by `section weight × question weight × size of the gap`. The top band is Priority 1. Every question carries a pre-written remediation sentence, so the improvement plan writes itself from the answers and quotes the answer that triggered it.
-
-The target band is yours to set, on the console's **Returns & exports** tab. It defaults to 4 (Managed).
-
-Two caveats worth repeating whenever you present the output, both stated on the Method tab: returns are **self-declared** rather than audited, and a low completion rate or a pile of **Not sure** answers is as significant as a low rating — it usually means nobody has visibility, which is itself the finding.
+Two caveats to repeat whenever you present the output, both stated on the Method tab: returns are **self-declared**, not audited; and a pile of **Not sure** answers is as significant as a low rating, because it means nobody has visibility.
 
 ---
 
 ## The console
 
-- **Sector dashboard** — returns received against the register (and who is outstanding), sector average and median, how many meet the target, how many are of most concern, total *Not sure* answers, the rating distribution, a sector radar with any single organisation overlaid, average by section, an organisation ranking, an organisation × section heatmap, and averages by type and region. Filters for type, region, rating band and free text apply to everything at once.
-- **Organisation reports** — pick an organisation and get its own report: rating gauge, its profile against the sector average and the target, section detail, a ranked improvement plan quoting each answer, the questions it could not answer, its established strengths, and an appendix reproducing every answer as submitted. **Export PDF** turns it into that organisation's feedback letter.
-- **Question analysis** — every question with the distribution of answers across the sector, its framework mapping, the weakest controls, and the actions needed by the most organisations. This is what tells you where a shared or centrally funded fix would pay off.
-- **Returns & exports** — load and remove returns, set the target band, and export a combined JSON, an organisation-level CSV, or an answer-level CSV.
-- **Method** — the rating rules, the bands, the answer values, the framework coverage and the section weights, so the numbers can be defended in a meeting.
+Sector dashboard (coverage against the register, sector average, who is meeting the target, rating distribution, sector radar with any organisation overlaid, average by section, organisation ranking, an organisation × section heatmap, averages by type and region), per-organisation reports you can export as that organisation's feedback letter, question analysis showing how all 30 answered each question with its framework mapping, exports (combined JSON, organisation CSV, answer-level CSV with both languages), and the Method tab.
 
-Returns are held in the browser's local storage on the machine you load them on, and are never uploaded by the page.
+The target band is a setting, so a cycle can be re-rated without touching the returns.
 
 ---
 
-## Branding it for the client
+## Building and customising
 
-Everything visual and textual lives in `assets/js/branding.js`:
+Sources live in `src/`; `index.html` and `console.html` at the root are **generated and committed**, so nobody needs Node to use the pack.
 
-```js
-organisation:  'National Health Authority',        // appears on both letterheads
-directorate:   'Cybersecurity & Digital Risk Directorate',
-programme:     'AI Cyber Assurance Programme',
-cycle:         '2026 Annual Return',
-documentRef:   'NHA/CDR/AICAP/2026-01',
-classification:'Official — Sensitive',             // the banner across the top
-returnDeadline:'31 May 2026',
-returnContact: 'ai.assurance@nha.health.example',  // where returns are sent
-logoPath:      'assets/brand/logo.svg',            // drop the client's file in and point here
-theme: { primary: '#123e5c', accent: '#0e8b7d', ... }
+```
+src/pages/questionnaire.html   page template with build placeholders
+src/pages/console.html         page template
+src/css/styles.css             theme, bilingual typography, A4 print rules
+src/js/branding.js             client name, logo, colours, cycle, deadline — bilingual
+src/js/framework.js            sections, questions, options, register, and reading answers back
+src/js/scoring.js              rating and aggregation engine (console only)
+src/js/survey.js               questionnaire controller
+src/js/console.js              console controller
+src/js/charts.js               dependency-free SVG radar, bars, gauge, heatmap, columns
+src/js/util.js                 storage, download and upload, CSV, formatting
+src/brand/logo.svg             placeholder crest — replace with the client's
+tools/build.mjs                inlines everything into the two root files
+schema/return.schema.json      JSON Schema for the return data file
 ```
 
-The name, palette, crest, classification banner, document reference, deadline and return address flow from there into both pages, both printed reports and the exported files. `assets/brand/logo.svg` is a placeholder crest — replace the file with the client's own logo (SVG or PNG).
+```bash
+node tools/build.mjs           # regenerate index.html and console.html
+node tools/build.mjs --check   # fail if either is out of date
+```
 
-To change the questions, edit `AIMA.sections` in `assets/js/framework.js`: each question needs an `id`, `text`, `hint`, `type`, `weight`, `refs` and — if it is rated — a `remedy`. Section weights must total 100; the test suite enforces it. Bump `AIMA.meta.frameworkVersion` when you change the question set so old returns stay identifiable.
+The build fails if anything external survives inlining, and it gives each copy of the logo unique element ids so a gradient referenced twice cannot render blank in print.
+
+To change the questions, edit `AIMA.sections`: each question needs an `id`, bilingual `text`, `type`, `weight`, `refs` and — if rated — a bilingual `remedy`. Section weights must total 100; the tests enforce it, along with Arabic being present everywhere.
+
+**One thing to be aware of:** because the questionnaire is a single self-contained file, its source necessarily contains the question bank. The rating engine is not shipped in it — the file organisations receive cannot compute or display a rating — but a determined reader could inspect the option values. That is a deliberate trade for portability, and it is a small exposure: the options are already listed worst-to-best on screen, and the method is published on the console's Method tab anyway.
 
 ---
 
-## Files
+## The return data file
 
-```
-index.html                    The questionnaire sent to organisations
-console.html                  The governing body console (do not publish alongside the questionnaire)
-assets/js/branding.js         Client name, logo, colours, cycle, deadline, return address
-assets/js/framework.js        Sections, questions, answer options and their hidden values, the register
-assets/js/scoring.js          Rating and aggregation engine (pure functions)
-assets/js/survey.js           Questionnaire controller — never touches the rating engine
-assets/js/console.js          Console controller
-assets/js/charts.js           Dependency-free SVG radar, bars, gauge, heatmap, columns
-assets/js/util.js             Storage, file download and upload, CSV, formatting
-assets/css/styles.css         Branded theme plus the A4 print stylesheets
-assets/brand/                 Placeholder crest and favicon — replace with the client's
-schema/return.schema.json     JSON Schema for the return data file
-tools/test-scoring.mjs        Question bank, rating and chart tests
-tools/browser-smoke.mjs       Optional end-to-end browser test
-```
-
-### The return data file
-
-One file per organisation, described by `schema/return.schema.json`. It holds **answers only** — there is nothing in it that reveals how answers are scored:
+One file per organisation, described by `schema/return.schema.json`. It holds **answers only**:
 
 ```jsonc
 {
-  "schemaVersion": "2.0.0",
-  "frameworkVersion": "2026.2",
+  "schemaVersion": "3.0.0",
+  "frameworkVersion": "2026.3",
   "period": "2026 Annual Return",
-  "entity":  { "code": "E14", "name": "Central Primary Care Cluster", "type": "Primary Care Cluster", "region": "Central" },
-  "contact": { "contactName": "S. Haddad", "contactRole": "Head of Information Security", "contactEmail": "…" },
+  "entity": {
+    "code": "E14",
+    "name": { "en": "Central Primary Care Cluster", "ar": "تجمع الرعاية الأولية المركزي" },
+    "type": { "en": "Primary Care Cluster", "ar": "تجمع رعاية أولية" }
+  },
+  "contact": { "contactName": "S. Haddad", "contactRole": "Head of Security Operations" },
   "submittedDate": "2026-05-14",
   "declarationConfirmed": true,
   "answers": {
-    "A1": { "value": "unsure" },
-    "A3": { "value": ["approved-tools", "data-limits"] },
-    "A4": { "value": "annual" },
-    "B5": { "value": 12 }
+    "C1": { "value": "yes" },
+    "D3": { "value": "tracked" },
+    "B1": { "value": ["endpoints", "network", "identity"] },
+    "D5": { "value": 250 }
   },
-  "sectionNotes": { "D": "Copilot is enabled in the back office only." },
-  "progress": { "answered": 51, "total": 51, "percent": 100 }
+  "sectionNotes": { "D": "Triage automation went live in March." },
+  "progress": { "answered": 55, "total": 55, "percent": 100 }
 }
 ```
 
-The console recomputes everything from `answers`, so a return cannot arrive with a rating already baked in, and re-rating a past cycle against a new target is just a setting change.
-
-Files from an earlier schema version are rejected with an explanation rather than silently mis-scored.
+Names are bilingual objects so a report can be produced in either language from the same file. The console recomputes everything from `answers`, and rejects files from an earlier schema rather than mis-scoring them.
 
 ---
 
 ## Testing
 
+254 automated checks.
+
 ```bash
-node tools/test-scoring.mjs          # 148 checks, no dependencies
+node tools/test-scoring.mjs        # 163 checks, no dependencies
 ```
 
-Covers the question bank (weights total 100, every question maps to a real framework, list options run worst to best, no maturity jargon in the wording), the answer-to-value rules, `Not sure` and `Not applicable` handling, the weighted arithmetic against hand-calculated figures, the action ranking, sector aggregation, framework coverage and the chart renderers. It also asserts the **separation between the two audiences**: the questionnaire must not call the rating engine, must not read the rating bands, and must not link to the console.
+Question bank integrity (weights total 100, the twelve domains are all present, every question maps to a real framework, list options run worst to best, no maturity jargon in the wording), **bilingual coverage** (every question, hint, option, remedy, section, band, organisation name and interface string has Arabic in Arabic script and differs from the English), the answer-to-value rules, weighted arithmetic against hand-calculated figures, aggregation, and the chart renderers.
+
+It also enforces the two structural guarantees: the built files have **no external references** and inline their own logo, and the questionnaire **does not ship the rating engine** — the built file contains no `computeResults`, no `aggregate`, and `survey.js` cannot reference them.
 
 ```bash
 npm install --no-save puppeteer-core
-CHROME_PATH=/usr/bin/google-chrome node tools/browser-smoke.mjs    # 79 checks
+CHROME_PATH=/usr/bin/google-chrome node tools/browser-smoke.mjs    # 91 checks
 ```
 
-Drives real Chrome through the whole cycle: completes all 51 questions through the actual inputs, asserts the page never shows a score or rating, checks the printed return reproduces every answer in words, downloads the data file and validates it against the schema, then loads it into the console and confirms the derived rating matches the shared engine exactly — including every section. It also exercises the target-band setting, the organisation report, the question analysis, both PDF exports and the rejection of an out-of-date schema. Screenshots, PDFs and the exported return land in `tools/.artifacts/`.
+Drives real Chrome through the cycle: confirms each page loads with **exactly one network request**, that every question renders in both languages with Arabic running right to left and no language toggle, completes all 55 questions through the actual inputs, checks the printed return is bilingual and shows answers in words, downloads the data file and validates it against the schema, then loads it into the console and confirms the derived rating matches an **independently computed** rating, section by section — the engine now has to be loaded separately in Node, because the questionnaire page does not have it. It also opens the built file over `file://` and asserts it renders, styles, keeps Arabic and makes **zero network requests**.
 
 ---
 
 ## Feeding a BI tool later
 
-The console is self-sufficient, but the exports are shaped for onward use:
-
-- **Answer-level CSV** — one row per organisation × question, with the answer in words, the derived value and the framework mapping. Pivots straight into a matrix visual in Power BI or Tableau.
-- **Organisation CSV** — one row per organisation with a column per section, ready for conditional formatting.
-- **Combined JSON** — the sector summary plus every raw return, for a warehouse. `entity.code`, `period` and `frameworkVersion` form a natural key for tracking across cycles. Store the raw `answers` and recompute with `assets/js/scoring.js`, which is plain side-effect-free JavaScript, so history stays consistent if the weights change.
+The answer-level CSV is one row per organisation × question with the answer in both languages, the derived value and the framework mapping — it pivots straight into a matrix visual. The organisation CSV is one row per organisation with a column per section. The combined JSON carries the sector summary plus every raw return; `entity.code`, `period` and `frameworkVersion` form a natural key across cycles. Store the raw `answers` and recompute with `src/js/scoring.js`, which is plain side-effect-free JavaScript, so history stays consistent if the weights change.
